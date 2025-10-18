@@ -1,0 +1,111 @@
+@startuml C4_Context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+LAYOUT_WITH_LEGEND()
+
+title System Context Diagram - Ekosistem Sekolah SaaS
+
+Person(super_admin, "Super Admin", "Platform administrator yang mengelola seluruh sistem")
+Person(school_admin, "Kepala Sekolah", "Mengakses semua aplikasi untuk sekolahnya")
+Person(admin, "Admin Sekolah", "Mengelola data operasional sekolah")
+Person(teacher, "Guru", "Mengajar, input nilai, kelola kelas")
+Person(student, "Siswa", "Akses materi, tugas, nilai")
+Person(parent, "Orang Tua", "Monitor anak, bayar SPP, komunikasi")
+Person(applicant, "Calon Siswa", "Mendaftar melalui PPDB")
+
+System_Boundary(ekosistem, "Ekosistem Sekolah") {
+    System(idp, "Identity Provider", "Centralized authentication, authorization, dan SSO untuk semua aplikasi")
+    
+    System_Boundary(core_apps, "Core Applications") {
+        System(ppdb, "PPDB System", "Penerimaan peserta didik baru online")
+        System(sis, "SIS", "Student Information System - Data master siswa, guru, kelas")
+        System(academic, "Academic System", "Manajemen kurikulum, jadwal, nilai, rapor")
+        System(lms, "LMS", "Learning Management System - Pembelajaran online")
+    }
+    
+    System_Boundary(operational_apps, "Operational Applications") {
+        System(attendance, "Attendance System", "Absensi siswa dan guru")
+        System(finance, "Finance System", "Pembayaran SPP, keuangan sekolah")
+        System(exam, "Exam System", "CBT dan ujian online")
+        System(hrms, "HRMS", "Manajemen SDM dan payroll")
+    }
+    
+    System_Boundary(support_apps, "Supporting Applications") {
+        System(library, "Library System", "Perpustakaan dan peminjaman buku")
+        System(facility, "Facility Management", "Booking ruangan dan asset")
+        System(extracurricular, "Extracurricular", "Manajemen kegiatan ekstrakurikuler")
+        System(canteen, "Canteen System", "Kantin dan e-wallet siswa")
+    }
+    
+    System_Boundary(analytics_apps, "Analytics & Communication") {
+        System(communication, "Communication Hub", "Announcement, chat, notifikasi")
+        System(analytics, "Analytics Dashboard", "BI dan reporting untuk decision making")
+        System(parent_portal, "Parent Portal", "Portal dan mobile app untuk orang tua")
+    }
+}
+
+System_Ext(payment_gateway, "Payment Gateway", "Midtrans, Xendit, dll")
+System_Ext(email_service, "Email Service", "Transactional email")
+System_Ext(sms_gateway, "SMS Gateway", "SMS notifications")
+System_Ext(oauth_providers, "OAuth Providers", "Google, Microsoft SSO")
+System_Ext(cloud_storage, "Cloud Storage", "Supabase Storage untuk file upload")
+
+' Relationships - Users to Identity Provider
+Rel(super_admin, idp, "Manages platform")
+Rel(school_admin, idp, "Authenticates", "HTTPS/JWT")
+Rel(admin, idp, "Authenticates", "HTTPS/JWT")
+Rel(teacher, idp, "Authenticates", "HTTPS/JWT")
+Rel(student, idp, "Authenticates", "HTTPS/JWT")
+Rel(parent, idp, "Authenticates", "HTTPS/JWT")
+Rel(applicant, ppdb, "Registers via", "HTTPS")
+
+' Relationships - IdP to Applications
+Rel(idp, ppdb, "Provides SSO", "JWT")
+Rel(idp, sis, "Provides SSO", "JWT")
+Rel(idp, academic, "Provides SSO", "JWT")
+Rel(idp, lms, "Provides SSO", "JWT")
+Rel(idp, attendance, "Provides SSO", "JWT")
+Rel(idp, finance, "Provides SSO", "JWT")
+Rel(idp, exam, "Provides SSO", "JWT")
+Rel(idp, hrms, "Provides SSO", "JWT")
+Rel(idp, library, "Provides SSO", "JWT")
+Rel(idp, facility, "Provides SSO", "JWT")
+Rel(idp, extracurricular, "Provides SSO", "JWT")
+Rel(idp, canteen, "Provides SSO", "JWT")
+Rel(idp, communication, "Provides SSO", "JWT")
+Rel(idp, analytics, "Provides SSO", "JWT")
+Rel(idp, parent_portal, "Provides SSO", "JWT")
+
+' Relationships - Users to Applications (via SSO)
+Rel(school_admin, sis, "Manages school data")
+Rel(admin, ppdb, "Processes applications")
+Rel(teacher, academic, "Inputs grades")
+Rel(teacher, lms, "Creates courses")
+Rel(teacher, attendance, "Records attendance")
+Rel(student, lms, "Learns online")
+Rel(student, exam, "Takes exams")
+Rel(parent, parent_portal, "Monitors children")
+Rel(parent, finance, "Pays fees")
+
+' Key Inter-app Integrations
+Rel(ppdb, sis, "Exports accepted students", "Internal API")
+Rel(sis, academic, "Provides student/class data", "Database/API")
+Rel(attendance, academic, "Sends attendance data", "Internal API")
+Rel(lms, academic, "Syncs grades", "Internal API")
+Rel(exam, academic, "Syncs exam results", "Internal API")
+Rel(finance, parent_portal, "Provides payment info", "Internal API")
+Rel(communication, parent_portal, "Sends notifications", "Push/Email")
+Rel(analytics, sis, "Aggregates data", "Read replica")
+Rel(analytics, academic, "Aggregates data", "Read replica")
+Rel(analytics, finance, "Aggregates data", "Read replica")
+
+' External System Relationships
+Rel(idp, oauth_providers, "OAuth authentication", "HTTPS")
+Rel(idp, email_service, "Sends verification emails", "SMTP/API")
+Rel(finance, payment_gateway, "Processes payments", "HTTPS/API")
+Rel(communication, email_service, "Sends emails", "SMTP/API")
+Rel(communication, sms_gateway, "Sends SMS", "HTTPS/API")
+Rel(ppdb, cloud_storage, "Uploads documents", "HTTPS")
+Rel(sis, cloud_storage, "Stores photos", "HTTPS")
+
+@enduml

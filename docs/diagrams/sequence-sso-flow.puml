@@ -1,0 +1,256 @@
+@startuml SSO_Authentication_Flow
+!theme plain
+
+title SSO Authentication Flow - Ekosistem Sekolah
+
+actor User as user
+participant "Browser" as browser
+participant "Service Provider\n(e.g., PPDB)" as sp
+participant "Identity Provider\n(IdP)" as idp
+database "Identity DB" as identity_db
+participant "Better Auth" as better_auth
+participant "JWT Service" as jwt
+
+== Initial Access - User Not Authenticated ==
+
+user -> browser: Visit https://ppdb.school1.app.com
+browser -> sp: GET /dashboard
+activate sp
+sp -> sp: Check session cookie
+sp -> sp: No valid session found
+sp -> browser: 302 Redirect to IdP
+deactivate sp
+
+note right of sp
+  Redirect URL:
+  https://auth.app.com/login
+  ?redirect_uri=https://ppdb.school1.app.com/dashboard
+  &client_id=ppdb
+  &school=school1
+end note
+
+== Identity Provider Login ==
+
+browser -> idp: GET /login?redirect_uri=...
+activate idp
+idp -> browser: Render login page
+deactivate idp
+
+user -> browser: Enter email & password
+browser -> idp: POST /api/auth/login
+activate idp
+
+idp -> better_auth: authenticate(email, password)
+activate better_auth
+
+better_auth -> identity_db: SELECT * FROM users\nWHERE email = ?
+activate identity_db
+identity_db -> better_auth: User record
+deactivate identity_db
+
+better_auth -> better_auth: Verify password hash
+better_auth -> idp: Authentication successful
+deactivate better_auth
+
+idp -> identity_db: SELECT schools, roles\nFROM user_schools\nJOIN user_school_roles
+activate identity_db
+identity_db -> idp: User's schools & roles
+deactivate identity_db
+
+note right of idp
+  User Context:
+  userId: "uuid-123"
+  email: "admin@school1.com"
+  schools: [
+    {
+      id: "school-uuid-1",
+      slug: "school1",
+      name: "SMA 1",
+      roles: ["admin", "teacher"]
+    }
+  ]
+end note
+
+== Session & JWT Generation ==
+
+idp -> identity_db: INSERT INTO sessions
+activate identity_db
+identity_db -> idp: Session created
+deactivate identity_db
+
+idp -> jwt: generateJWT(userContext)
+activate jwt
+
+jwt -> jwt: Create payload with claims
+note right of jwt
+  JWT Payload:
+  {
+    "sub": "uuid-123",
+    "email": "admin@school1.com",
+    "name": "John Doe",
+    "schools": [...],
+    "iss": "https://auth.app.com",
+    "aud": "ppdb",
+    "exp": 1234567890,
+    "iat": 1234567000
+  }
+end note
+
+jwt -> jwt: Sign with secret key
+jwt -> idp: JWT token
+deactivate jwt
+
+idp -> identity_db: INSERT INTO audit_logs
+activate identity_db
+identity_db -> idp: Audit logged
+deactivate identity_db
+
+idp -> browser: 302 Redirect to SP\nSet-Cookie: idp_token=JWT\nSet-Cookie: idp_session=session_id
+deactivate idp
+
+note right of idp
+  Redirect URL:
+  https://ppdb.school1.app.com/dashboard
+  
+  Cookies:
+  - idp_token (JWT, httpOnly, secure)
+  - idp_session (session ID)
+end note
+
+== Return to Service Provider ==
+
+browser -> sp: GET /dashboard\nCookie: idp_token=JWT
+activate sp
+
+sp -> sp: Extract JWT from cookie
+
+sp -> sp: Verify JWT signature
+note right of sp
+  JWT Verification:
+  1. Check signature with shared secret
+  2. Verify issuer (https://auth.app.com)
+  3. Verify audience (ppdb)
+  4. Check expiration
+  5. Extract claims
+end note
+
+sp -> sp: Extract school context\nfrom subdomain (school1)
+
+sp -> sp: Validate user belongs to school
+note right of sp
+  Check JWT claims:
+  schools array contains
+  {slug: "school1", ...}
+end note
+
+sp -> sp: Create SP session\nSet user context in headers
+
+sp -> sp: Check permissions\nfor /dashboard route
+
+sp -> sp: Query PPDB data\n(RLS enforces school_id)
+
+sp -> browser: 200 OK\nRender dashboard page
+deactivate sp
+
+browser -> user: Display dashboard
+
+== Subsequent Requests ==
+
+user -> browser: Click on "View Registrations"
+browser -> sp: GET /registrations\nCookie: idp_token=JWT
+activate sp
+
+sp -> sp: Verify JWT (cached)
+sp -> sp: Check permission:\nregistration:read
+
+sp -> sp: Query registrations\nWHERE school_id = 'school1'
+
+sp -> browser: 200 OK\nRegistrations data
+deactivate sp
+
+browser -> user: Display registrations
+
+== Access Another Service Provider ==
+
+user -> browser: Visit https://sis.school1.app.com
+browser -> sp: GET /\nCookie: idp_token=JWT
+activate sp
+
+note right of sp
+  Same JWT token works
+  for all Service Providers!
+  This is Single Sign-On (SSO)
+end note
+
+sp -> sp: Verify JWT
+sp -> sp: Extract school context
+sp -> sp: User authenticated!\nNo need to login again
+
+sp -> browser: 200 OK\nSIS dashboard
+deactivate sp
+
+browser -> user: Display SIS dashboard
+
+== JWT Expiration & Refresh ==
+
+group JWT Expired (after 1 hour)
+  user -> browser: Request to SP
+  browser -> sp: GET /data\nCookie: idp_token=expired_JWT
+  activate sp
+  
+  sp -> sp: Verify JWT
+  sp -> sp: JWT expired!
+  
+  sp -> browser: 302 Redirect to IdP\n/auth/refresh
+  deactivate sp
+  
+  browser -> idp: GET /auth/refresh\nCookie: idp_session=session_id
+  activate idp
+  
+  idp -> identity_db: SELECT * FROM sessions\nWHERE token = ?
+  activate identity_db
+  identity_db -> idp: Session valid
+  deactivate identity_db
+  
+  idp -> jwt: Generate new JWT
+  activate jwt
+  jwt -> idp: New JWT token
+  deactivate jwt
+  
+  idp -> browser: 302 Redirect to SP\nSet-Cookie: idp_token=new_JWT
+  deactivate idp
+  
+  browser -> sp: GET /data\nCookie: idp_token=new_JWT
+  activate sp
+  sp -> browser: 200 OK with data
+  deactivate sp
+end
+
+== Logout ==
+
+user -> browser: Click logout
+browser -> sp: POST /api/auth/logout
+activate sp
+
+sp -> idp: POST /api/auth/logout\nCookie: idp_session
+activate idp
+
+idp -> identity_db: DELETE FROM sessions\nWHERE token = ?
+activate identity_db
+identity_db -> idp: Session deleted
+deactivate identity_db
+
+idp -> identity_db: INSERT INTO audit_logs\n(action: 'logout')
+activate identity_db
+identity_db -> idp: Audit logged
+deactivate identity_db
+
+idp -> browser: Clear cookies\nRedirect to login
+deactivate idp
+
+sp -> browser: Clear SP cookies
+deactivate sp
+
+browser -> user: Redirected to login page
+
+@enduml

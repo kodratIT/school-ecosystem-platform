@@ -1,0 +1,158 @@
+@startuml C4_Container
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_WITH_LEGEND()
+
+title Container Diagram - Ekosistem Sekolah Architecture
+
+Person(user, "User", "School staff, teachers, students, parents")
+
+System_Boundary(monorepo, "Monorepo - Ekosistem Sekolah") {
+    
+    Container_Boundary(identity_system, "Identity Provider") {
+        Container(idp_app, "Identity Provider App", "Next.js 14", "Authentication, authorization, SSO orchestration")
+        ContainerDb(identity_db, "Identity Database", "Supabase/PostgreSQL", "Users, roles, permissions, schools, sessions, audit logs")
+    }
+    
+    Container_Boundary(ppdb_system, "PPDB Service Provider") {
+        Container(ppdb_app, "PPDB App", "Next.js 14", "Public portal dan admin dashboard untuk PPDB")
+        ContainerDb(ppdb_db, "PPDB Database", "Supabase/PostgreSQL", "Registrations, applicants, documents, payments, selections")
+    }
+    
+    Container_Boundary(sis_system, "SIS Service Provider") {
+        Container(sis_app, "SIS App", "Next.js 14", "Student Information System")
+        ContainerDb(sis_db, "SIS Database", "Supabase/PostgreSQL", "Students, teachers, parents, classes, relationships")
+    }
+    
+    Container_Boundary(academic_system, "Academic Service Provider") {
+        Container(academic_app, "Academic App", "Next.js 14", "Academic management dan grading")
+        ContainerDb(academic_db, "Academic Database", "Supabase/PostgreSQL", "Subjects, schedules, grades, report cards, curriculum")
+    }
+    
+    Container_Boundary(lms_system, "LMS Service Provider") {
+        Container(lms_app, "LMS App", "Next.js 14", "Learning management system")
+        ContainerDb(lms_db, "LMS Database", "Supabase/PostgreSQL", "Courses, materials, assignments, submissions, quizzes")
+    }
+    
+    Container_Boundary(attendance_system, "Attendance Service Provider") {
+        Container(attendance_app, "Attendance App", "Next.js 14", "Attendance tracking")
+        ContainerDb(attendance_db, "Attendance Database", "Supabase/PostgreSQL", "Attendance records, leave requests")
+    }
+    
+    Container_Boundary(finance_system, "Finance Service Provider") {
+        Container(finance_app, "Finance App", "Next.js 14", "Finance dan payment management")
+        ContainerDb(finance_db, "Finance Database", "Supabase/PostgreSQL", "Invoices, payments, transactions, fee types")
+    }
+    
+    Container_Boundary(exam_system, "Exam Service Provider") {
+        Container(exam_app, "Exam App", "Next.js 14", "CBT dan exam management")
+        ContainerDb(exam_db, "Exam Database", "Supabase/PostgreSQL", "Exams, questions, answers, results")
+    }
+    
+    Container_Boundary(analytics_system, "Analytics Service Provider") {
+        Container(analytics_app, "Analytics App", "Next.js 14", "BI Dashboard dan reporting")
+        ContainerDb(analytics_db, "Analytics Database", "Supabase/PostgreSQL", "Aggregated data, reports, KPIs")
+    }
+    
+    Container_Boundary(parent_system, "Parent Portal") {
+        Container(parent_app, "Parent Portal App", "Next.js 14 + PWA", "Web dan mobile app untuk orang tua")
+    }
+    
+    Container_Boundary(shared_packages, "Shared Packages") {
+        Container(identity_client, "@repo/identity-client", "TypeScript Package", "JWT verification, user context")
+        Container(rbac_engine, "@repo/rbac", "TypeScript Package", "Permission checking, role management")
+        Container(ui_components, "@repo/ui", "React Components", "Shared UI components (shadcn/ui)")
+        Container(validators, "@repo/validators", "Zod Schemas", "Shared validation schemas")
+        Container(api_client, "@repo/api-client", "TypeScript Package", "Inter-app API communication")
+    }
+}
+
+System_Ext(supabase_storage, "Supabase Storage", "File storage untuk documents, photos, videos")
+System_Ext(payment_gateway, "Payment Gateway", "Midtrans/Xendit API")
+System_Ext(email_service, "Email Service", "SendGrid/AWS SES")
+System_Ext(sms_gateway, "SMS Gateway", "Twilio/local provider")
+System_Ext(oauth_provider, "OAuth Providers", "Google, Microsoft")
+
+' User to Apps
+Rel(user, idp_app, "Authenticates", "HTTPS")
+Rel(user, ppdb_app, "Registers", "HTTPS")
+Rel(user, sis_app, "Manages data", "HTTPS")
+Rel(user, academic_app, "Manages academics", "HTTPS")
+Rel(user, lms_app, "Learns online", "HTTPS")
+Rel(user, attendance_app, "Records attendance", "HTTPS")
+Rel(user, finance_app, "Manages payments", "HTTPS")
+Rel(user, exam_app, "Takes exams", "HTTPS")
+Rel(user, analytics_app, "Views reports", "HTTPS")
+Rel(user, parent_app, "Monitors children", "HTTPS")
+
+' IdP relationships
+Rel(idp_app, identity_db, "Reads/Writes", "SQL")
+Rel(idp_app, oauth_provider, "OAuth flow", "HTTPS")
+Rel(idp_app, email_service, "Sends verification emails", "SMTP")
+
+' IdP to Service Providers (JWT issuance)
+Rel(idp_app, ppdb_app, "Issues JWT token", "JWT")
+Rel(idp_app, sis_app, "Issues JWT token", "JWT")
+Rel(idp_app, academic_app, "Issues JWT token", "JWT")
+Rel(idp_app, lms_app, "Issues JWT token", "JWT")
+Rel(idp_app, attendance_app, "Issues JWT token", "JWT")
+Rel(idp_app, finance_app, "Issues JWT token", "JWT")
+Rel(idp_app, exam_app, "Issues JWT token", "JWT")
+Rel(idp_app, analytics_app, "Issues JWT token", "JWT")
+Rel(idp_app, parent_app, "Issues JWT token", "JWT")
+
+' Service Provider Apps to DBs
+Rel(ppdb_app, ppdb_db, "Reads/Writes", "SQL + RLS")
+Rel(sis_app, sis_db, "Reads/Writes", "SQL + RLS")
+Rel(academic_app, academic_db, "Reads/Writes", "SQL + RLS")
+Rel(lms_app, lms_db, "Reads/Writes", "SQL + RLS")
+Rel(attendance_app, attendance_db, "Reads/Writes", "SQL + RLS")
+Rel(finance_app, finance_db, "Reads/Writes", "SQL + RLS")
+Rel(exam_app, exam_db, "Reads/Writes", "SQL + RLS")
+Rel(analytics_app, analytics_db, "Reads/Writes", "SQL + RLS")
+
+' All apps use shared packages
+Rel(ppdb_app, identity_client, "Uses")
+Rel(ppdb_app, rbac_engine, "Uses")
+Rel(ppdb_app, ui_components, "Uses")
+Rel(ppdb_app, validators, "Uses")
+
+Rel(sis_app, identity_client, "Uses")
+Rel(sis_app, rbac_engine, "Uses")
+Rel(sis_app, ui_components, "Uses")
+
+Rel(academic_app, identity_client, "Uses")
+Rel(academic_app, rbac_engine, "Uses")
+Rel(academic_app, api_client, "Uses")
+
+' Cross-database access (Foreign Data Wrapper)
+Rel(sis_db, identity_db, "Foreign Data Wrapper", "postgres_fdw")
+Rel(academic_db, identity_db, "Foreign Data Wrapper", "postgres_fdw")
+
+' Inter-app communication
+Rel(ppdb_app, sis_app, "Exports accepted students", "Internal API")
+Rel(academic_app, attendance_app, "Fetches attendance", "Internal API")
+Rel(academic_app, exam_app, "Fetches exam results", "Internal API")
+Rel(lms_app, academic_app, "Syncs grades", "Internal API")
+
+' Parent Portal aggregates data
+Rel(parent_app, sis_app, "Gets student data", "Internal API")
+Rel(parent_app, academic_app, "Gets grades", "Internal API")
+Rel(parent_app, finance_app, "Gets invoices", "Internal API")
+Rel(parent_app, attendance_app, "Gets attendance", "Internal API")
+
+' Analytics aggregates from all
+Rel(analytics_app, identity_db, "Read replica", "SQL Read-only")
+Rel(analytics_app, sis_db, "Read replica", "SQL Read-only")
+Rel(analytics_app, academic_db, "Read replica", "SQL Read-only")
+Rel(analytics_app, finance_db, "Read replica", "SQL Read-only")
+Rel(analytics_app, attendance_db, "Read replica", "SQL Read-only")
+
+' External services
+Rel(ppdb_app, supabase_storage, "Uploads documents", "HTTPS")
+Rel(sis_app, supabase_storage, "Uploads photos", "HTTPS")
+Rel(finance_app, payment_gateway, "Processes payments", "HTTPS/Webhook")
+Rel(finance_app, email_service, "Sends invoices", "SMTP")
+Rel(parent_app, sms_gateway, "Sends notifications", "HTTPS")
+
+@enduml

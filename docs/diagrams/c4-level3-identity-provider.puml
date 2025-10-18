@@ -1,0 +1,129 @@
+@startuml C4_Component_IdP
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+LAYOUT_WITH_LEGEND()
+
+title Component Diagram - Identity Provider
+
+Person(user, "User", "Any user accessing the system")
+System_Ext(oauth_provider, "OAuth Provider", "Google, Microsoft")
+System_Ext(email_service, "Email Service", "Transactional emails")
+
+Container_Boundary(idp_app, "Identity Provider App - Next.js") {
+    
+    Component_Boundary(frontend, "Frontend Layer") {
+        Component(login_page, "Login Page", "React/Next.js", "User login interface")
+        Component(register_page, "Register Page", "React/Next.js", "User registration")
+        Component(school_selector, "School Selector", "React/Next.js", "Multi-school selection UI")
+        Component(profile_page, "Profile Page", "React/Next.js", "User profile management")
+        Component(admin_panel, "Admin Panel", "React/Next.js", "Role & permission management")
+    }
+    
+    Component_Boundary(api_layer, "API Layer") {
+        Component(auth_api, "Auth API", "Next.js API Routes", "Authentication endpoints")
+        Component(user_api, "User API", "Next.js API Routes", "User CRUD operations")
+        Component(school_api, "School API", "Next.js API Routes", "School management")
+        Component(role_api, "Role API", "Next.js API Routes", "Role management")
+        Component(permission_api, "Permission API", "Next.js API Routes", "Permission management")
+        Component(sso_api, "SSO API", "Next.js API Routes", "SSO initiation & callback")
+    }
+    
+    Component_Boundary(business_logic, "Business Logic Layer") {
+        Component(better_auth, "Better Auth", "better-auth Library", "Core authentication engine")
+        Component(jwt_service, "JWT Service", "jose Library", "JWT generation & verification")
+        Component(rbac_service, "RBAC Service", "@repo/rbac", "Permission checking engine")
+        Component(user_service, "User Service", "TypeScript", "User management logic")
+        Component(school_service, "School Service", "TypeScript", "Multi-tenant management")
+        Component(audit_service, "Audit Service", "TypeScript", "Audit logging")
+    }
+    
+    Component_Boundary(data_layer, "Data Access Layer") {
+        Component(user_repo, "User Repository", "TypeScript", "User data access")
+        Component(school_repo, "School Repository", "TypeScript", "School data access")
+        Component(role_repo, "Role Repository", "TypeScript", "Role data access")
+        Component(permission_repo, "Permission Repository", "TypeScript", "Permission data access")
+        Component(session_repo, "Session Repository", "TypeScript", "Session management")
+        Component(audit_repo, "Audit Repository", "TypeScript", "Audit log storage")
+    }
+    
+    Component_Boundary(middleware, "Middleware Layer") {
+        Component(auth_middleware, "Auth Middleware", "Next.js Middleware", "Verifies sessions")
+        Component(rate_limiter, "Rate Limiter", "Middleware", "Prevents abuse")
+        Component(csrf_protection, "CSRF Protection", "Middleware", "Security protection")
+    }
+}
+
+ContainerDb(identity_db, "Identity Database", "Supabase/PostgreSQL", "Users, schools, roles, permissions, sessions")
+
+' User interactions
+Rel(user, login_page, "Visits", "HTTPS")
+Rel(user, register_page, "Registers", "HTTPS")
+Rel(user, school_selector, "Selects school", "HTTPS")
+Rel(user, profile_page, "Manages profile", "HTTPS")
+Rel(user, admin_panel, "Manages roles", "HTTPS")
+
+' Frontend to API
+Rel(login_page, auth_api, "Login request", "POST /api/auth/login")
+Rel(register_page, auth_api, "Register request", "POST /api/auth/register")
+Rel(school_selector, user_api, "Get user schools", "GET /api/users/schools")
+Rel(profile_page, user_api, "Update profile", "PUT /api/users/:id")
+Rel(admin_panel, role_api, "Manage roles", "REST API")
+Rel(admin_panel, permission_api, "Manage permissions", "REST API")
+
+' Middleware intercepts requests
+Rel(login_page, auth_middleware, "Passes through")
+Rel(profile_page, auth_middleware, "Requires auth")
+Rel(admin_panel, auth_middleware, "Requires auth")
+
+' API to Business Logic
+Rel(auth_api, better_auth, "Authenticates user")
+Rel(auth_api, jwt_service, "Generates JWT")
+Rel(auth_api, audit_service, "Logs auth event")
+Rel(user_api, user_service, "User operations")
+Rel(school_api, school_service, "School operations")
+Rel(role_api, rbac_service, "Role operations")
+Rel(permission_api, rbac_service, "Permission operations")
+Rel(sso_api, jwt_service, "Issues SSO token")
+
+' Business Logic to Data Layer
+Rel(better_auth, user_repo, "Reads/Writes users")
+Rel(better_auth, session_repo, "Manages sessions")
+Rel(user_service, user_repo, "User CRUD")
+Rel(school_service, school_repo, "School CRUD")
+Rel(rbac_service, role_repo, "Role CRUD")
+Rel(rbac_service, permission_repo, "Permission CRUD")
+Rel(audit_service, audit_repo, "Writes audit logs")
+
+' Data Layer to Database
+Rel(user_repo, identity_db, "SQL queries", "SQL")
+Rel(school_repo, identity_db, "SQL queries", "SQL")
+Rel(role_repo, identity_db, "SQL queries", "SQL")
+Rel(permission_repo, identity_db, "SQL queries", "SQL")
+Rel(session_repo, identity_db, "SQL queries", "SQL")
+Rel(audit_repo, identity_db, "SQL queries", "SQL")
+
+' External integrations
+Rel(better_auth, oauth_provider, "OAuth flow", "OAuth 2.0")
+Rel(better_auth, email_service, "Email verification", "SMTP/API")
+Rel(audit_service, email_service, "Alert emails", "SMTP/API")
+
+' JWT Service generates tokens with claims
+note right of jwt_service
+  JWT Payload:
+  - userId
+  - email
+  - schools: [{id, slug, roles}]
+  - Signed with secret
+  - Expires in 1 hour
+end note
+
+' RBAC Service logic
+note right of rbac_service
+  Permission Check:
+  1. Get user's roles in school
+  2. Get roles' permissions
+  3. Check if permission exists
+  4. Cache result
+end note
+
+@enduml

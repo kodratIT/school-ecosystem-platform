@@ -1,0 +1,258 @@
+@startuml Identity_Database_Schema
+!theme plain
+
+title Identity Database Schema - Federated Identity
+
+' Define entities
+entity "schools" as schools {
+  * id : UUID <<PK>>
+  --
+  * name : TEXT
+  * slug : TEXT <<UNIQUE>>
+  domain : TEXT
+  logo_url : TEXT
+  settings : JSONB
+  subscription_tier : TEXT
+  subscription_expires_at : TIMESTAMPTZ
+  is_active : BOOLEAN
+  * created_at : TIMESTAMPTZ
+  * updated_at : TIMESTAMPTZ
+}
+
+entity "users" as users {
+  * id : UUID <<PK>>
+  --
+  * email : TEXT <<UNIQUE>>
+  email_verified : BOOLEAN
+  name : TEXT
+  avatar_url : TEXT
+  phone : TEXT
+  password_hash : TEXT
+  * created_at : TIMESTAMPTZ
+  * updated_at : TIMESTAMPTZ
+}
+
+entity "sessions" as sessions {
+  * id : UUID <<PK>>
+  --
+  * user_id : UUID <<FK>>
+  * expires_at : TIMESTAMPTZ
+  * token : TEXT <<UNIQUE>>
+  ip_address : TEXT
+  user_agent : TEXT
+  * created_at : TIMESTAMPTZ
+}
+
+entity "user_schools" as user_schools {
+  * id : UUID <<PK>>
+  --
+  * user_id : UUID <<FK>>
+  * school_id : UUID <<FK>>
+  is_primary : BOOLEAN
+  * joined_at : TIMESTAMPTZ
+  --
+  <<UNIQUE(user_id, school_id)>>
+}
+
+entity "roles" as roles {
+  * id : UUID <<PK>>
+  --
+  * name : TEXT <<UNIQUE>>
+  * display_name : TEXT
+  description : TEXT
+  is_system : BOOLEAN
+  * created_at : TIMESTAMPTZ
+}
+
+entity "user_school_roles" as user_school_roles {
+  * id : UUID <<PK>>
+  --
+  * user_id : UUID <<FK>>
+  * school_id : UUID <<FK>>
+  * role_id : UUID <<FK>>
+  assigned_at : TIMESTAMPTZ
+  assigned_by : UUID <<FK>>
+  --
+  <<UNIQUE(user_id, school_id, role_id)>>
+}
+
+entity "permissions" as permissions {
+  * id : UUID <<PK>>
+  --
+  * resource : TEXT
+  * action : TEXT
+  * name : TEXT <<UNIQUE>>
+  display_name : TEXT
+  description : TEXT
+  * created_at : TIMESTAMPTZ
+  --
+  <<UNIQUE(resource, action)>>
+}
+
+entity "role_permissions" as role_permissions {
+  * id : UUID <<PK>>
+  --
+  * role_id : UUID <<FK>>
+  * permission_id : UUID <<FK>>
+  * created_at : TIMESTAMPTZ
+  --
+  <<UNIQUE(role_id, permission_id)>>
+}
+
+entity "oauth_accounts" as oauth_accounts {
+  * id : UUID <<PK>>
+  --
+  * user_id : UUID <<FK>>
+  * provider : TEXT
+  * provider_account_id : TEXT
+  access_token : TEXT
+  refresh_token : TEXT
+  expires_at : TIMESTAMPTZ
+  * created_at : TIMESTAMPTZ
+  --
+  <<UNIQUE(provider, provider_account_id)>>
+}
+
+entity "audit_logs" as audit_logs {
+  * id : UUID <<PK>>
+  --
+  user_id : UUID <<FK>>
+  school_id : UUID <<FK>>
+  * action : TEXT
+  * resource : TEXT
+  resource_id : TEXT
+  metadata : JSONB
+  ip_address : TEXT
+  user_agent : TEXT
+  * created_at : TIMESTAMPTZ
+}
+
+entity "user_sp_access" as user_sp_access {
+  * id : UUID <<PK>>
+  --
+  * user_id : UUID <<FK>>
+  * school_id : UUID <<FK>>
+  * service_provider : TEXT
+  * first_accessed_at : TIMESTAMPTZ
+  * last_accessed_at : TIMESTAMPTZ
+  access_count : INT
+  --
+  <<UNIQUE(user_id, school_id, service_provider)>>
+}
+
+' Relationships
+users ||--o{ sessions : "has many"
+users ||--o{ user_schools : "belongs to"
+schools ||--o{ user_schools : "has members"
+users ||--o{ user_school_roles : "has roles in"
+schools ||--o{ user_school_roles : "has users with roles"
+roles ||--o{ user_school_roles : "assigned to users"
+roles ||--o{ role_permissions : "has permissions"
+permissions ||--o{ role_permissions : "granted to roles"
+users ||--o{ oauth_accounts : "has OAuth accounts"
+users ||--o{ audit_logs : "generates logs"
+schools ||--o{ audit_logs : "logs actions"
+users ||--o{ user_sp_access : "accesses"
+schools ||--o{ user_sp_access : "accessed in context"
+users ||--o{ user_school_roles : "assigned by"
+
+' Notes
+note right of schools
+  **Multi-Tenant Table**
+  Each school is a separate tenant
+  Isolated by RLS policies
+  
+  **Subscription Tiers:**
+  - free (max 100 students)
+  - basic (max 500 students)
+  - premium (unlimited)
+  - enterprise (custom)
+end note
+
+note right of users
+  **Central User Table**
+  Managed by Better Auth
+  Single source of truth
+  
+  **Authentication Methods:**
+  - Email/Password
+  - OAuth (Google, Microsoft)
+  - Magic Link (optional)
+end note
+
+note right of user_schools
+  **Multi-Tenancy Association**
+  A user can belong to multiple schools
+  Example: Teacher teaches at 2 schools
+  
+  is_primary = default school on login
+end note
+
+note right of user_school_roles
+  **RBAC Core Table**
+  User can have different roles
+  in different schools
+  
+  Example:
+  - User X is "teacher" in School A
+  - User X is "admin" in School B
+end note
+
+note right of roles
+  **System Roles:**
+  - super_admin (platform admin)
+  - school_admin (kepala sekolah)
+  - admin (admin sekolah)
+  - teacher (guru)
+  - student (siswa)
+  - parent (orang tua)
+  - staff_* (various staff)
+  
+  Custom roles can be created
+end note
+
+note right of permissions
+  **Permission Naming:**
+  Pattern: resource:action
+  
+  Examples:
+  - student:create
+  - grade:read
+  - payment:process
+  - report:export
+  
+  Granular control per resource
+end note
+
+note right of role_permissions
+  **Permission Assignment**
+  Many-to-Many relationship
+  Flexible permission model
+  
+  Easy to add/remove permissions
+  from roles without affecting users
+end note
+
+note right of audit_logs
+  **Security & Compliance**
+  Logs all important actions:
+  - Login/Logout
+  - Data modifications
+  - Permission changes
+  - Failed access attempts
+  
+  Retention: 1 year minimum
+end note
+
+note right of user_sp_access
+  **Analytics & Tracking**
+  Track which Service Provider
+  each user has accessed
+  
+  Useful for:
+  - Usage analytics
+  - License management
+  - Feature adoption
+end note
+
+@enduml

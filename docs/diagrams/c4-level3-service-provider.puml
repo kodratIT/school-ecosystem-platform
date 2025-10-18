@@ -1,0 +1,154 @@
+@startuml C4_Component_ServiceProvider
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+LAYOUT_WITH_LEGEND()
+
+title Component Diagram - Service Provider (Generic Pattern)
+
+Person(user, "Authenticated User", "User with valid JWT from IdP")
+System_Ext(idp, "Identity Provider", "Centralized auth service")
+System_Ext(other_sp, "Other Service Providers", "Cross-app APIs")
+
+Container_Boundary(sp_app, "Service Provider App - Next.js") {
+    
+    Component_Boundary(frontend, "Frontend Layer") {
+        Component(dashboard, "Dashboard", "React/Next.js", "Main dashboard UI")
+        Component(list_page, "List Pages", "React/Next.js", "Data tables & lists")
+        Component(form_page, "Form Pages", "React/Next.js", "Create/Edit forms")
+        Component(detail_page, "Detail Pages", "React/Next.js", "Detail views")
+    }
+    
+    Component_Boundary(api_layer, "API Layer") {
+        Component(public_api, "Public API", "Next.js API Routes", "Public endpoints")
+        Component(protected_api, "Protected API", "Next.js API Routes", "Authenticated endpoints")
+        Component(internal_api, "Internal API", "Next.js API Routes", "Inter-app communication")
+        Component(webhook, "Webhooks", "Next.js API Routes", "External webhooks")
+    }
+    
+    Component_Boundary(middleware, "Middleware Layer") {
+        Component(auth_middleware, "Auth Middleware", "Next.js Middleware", "JWT verification & user context")
+        Component(rbac_middleware, "RBAC Middleware", "Middleware", "Permission enforcement")
+        Component(tenant_middleware, "Tenant Middleware", "Middleware", "School context extraction")
+        Component(rls_middleware, "RLS Middleware", "Middleware", "Sets RLS context")
+    }
+    
+    Component_Boundary(business_logic, "Business Logic Layer") {
+        Component(domain_service, "Domain Service", "TypeScript", "Business logic for domain entities")
+        Component(validation_service, "Validation Service", "Zod", "Input validation")
+        Component(permission_checker, "Permission Checker", "@repo/rbac", "Check user permissions")
+        Component(integration_service, "Integration Service", "TypeScript", "Inter-app communication")
+        Component(notification_service, "Notification Service", "TypeScript", "Send notifications")
+    }
+    
+    Component_Boundary(data_layer, "Data Access Layer") {
+        Component(domain_repo, "Domain Repository", "TypeScript", "Entity data access")
+        Component(query_builder, "Query Builder", "TypeScript", "Complex queries")
+        Component(cache_layer, "Cache Layer", "Redis/Memory", "Query result caching")
+    }
+    
+    Component_Boundary(shared_packages, "Shared Packages Used") {
+        Component(identity_client, "@repo/identity-client", "Package", "JWT verification")
+        Component(rbac_pkg, "@repo/rbac", "Package", "RBAC engine")
+        Component(ui_components, "@repo/ui", "Package", "Shared UI components")
+        Component(validators, "@repo/validators", "Package", "Zod schemas")
+        Component(api_client, "@repo/api-client", "Package", "API client for other SPs")
+    }
+}
+
+ContainerDb(sp_db, "Service Provider Database", "Supabase/PostgreSQL", "Domain-specific data with RLS")
+ContainerDb(identity_db, "Identity Database", "Supabase/PostgreSQL", "Users & roles (read-only via FDW)")
+
+' User interactions
+Rel(user, dashboard, "Visits", "HTTPS with JWT cookie")
+Rel(user, list_page, "Views data", "HTTPS")
+Rel(user, form_page, "Submits form", "HTTPS")
+Rel(user, detail_page, "Views details", "HTTPS")
+
+' Frontend to API
+Rel(dashboard, protected_api, "Fetches data", "GET /api/entities")
+Rel(list_page, protected_api, "Fetches list", "GET /api/entities")
+Rel(form_page, protected_api, "Submits data", "POST /api/entities")
+Rel(detail_page, protected_api, "Fetches detail", "GET /api/entities/:id")
+
+' All requests pass through middleware
+Rel(protected_api, auth_middleware, "Passes through")
+Rel(auth_middleware, rbac_middleware, "After auth")
+Rel(rbac_middleware, tenant_middleware, "After RBAC")
+Rel(tenant_middleware, rls_middleware, "After tenant check")
+
+' Middleware uses shared packages
+Rel(auth_middleware, identity_client, "Verifies JWT")
+Rel(rbac_middleware, rbac_pkg, "Checks permissions")
+Rel(tenant_middleware, identity_client, "Extracts school context")
+
+' API to Business Logic
+Rel(protected_api, domain_service, "Calls business logic")
+Rel(protected_api, validation_service, "Validates input")
+Rel(protected_api, permission_checker, "Checks permissions")
+
+Rel(internal_api, integration_service, "Handles inter-app requests")
+Rel(webhook, domain_service, "Processes webhook events")
+
+' Business Logic operations
+Rel(domain_service, validation_service, "Validates data")
+Rel(domain_service, permission_checker, "Checks permissions")
+Rel(domain_service, domain_repo, "Data operations")
+Rel(domain_service, integration_service, "Calls other SPs")
+Rel(domain_service, notification_service, "Sends notifications")
+
+Rel(validation_service, validators, "Uses schemas")
+Rel(integration_service, api_client, "Makes API calls")
+
+' Data Layer operations
+Rel(domain_repo, query_builder, "Complex queries")
+Rel(domain_repo, cache_layer, "Cache check")
+Rel(query_builder, sp_db, "SQL queries with RLS", "SQL")
+Rel(cache_layer, sp_db, "Cache miss", "SQL")
+
+' Cross-database access
+Rel(query_builder, identity_db, "Read user data", "Foreign Data Wrapper")
+
+' Integration with other systems
+Rel(integration_service, other_sp, "Internal API call", "HTTPS with internal token")
+Rel(notification_service, idp, "Trigger notification", "API")
+
+' Frontend uses shared components
+Rel(dashboard, ui_components, "Renders with")
+Rel(list_page, ui_components, "Renders with")
+Rel(form_page, ui_components, "Renders with")
+
+' Middleware flow notes
+note right of auth_middleware
+  Auth Middleware:
+  1. Extract JWT from cookie
+  2. Verify with Identity Client
+  3. Inject user context to headers:
+     - X-User-Id
+     - X-School-Id
+     - X-User-Roles
+end note
+
+note right of rbac_middleware
+  RBAC Middleware:
+  1. Get required permission for route
+  2. Check user has permission
+  3. Return 403 if not allowed
+end note
+
+note right of rls_middleware
+  RLS Middleware:
+  1. Set school_id context
+  2. Supabase RLS policies enforce:
+     WHERE school_id = current_setting('app.current_school_id')
+end note
+
+note right of domain_service
+  Domain Service handles:
+  - Business rules validation
+  - Complex operations
+  - Transaction management
+  - Event emission
+  - Integration orchestration
+end note
+
+@enduml

@@ -1,0 +1,237 @@
+@startuml Database_Federation_Architecture
+!theme plain
+
+title Database Federation Architecture - Multi-Database Strategy
+
+package "Supabase Project: Identity" {
+  database "Identity Database" as identity_db {
+    frame "Core Tables" {
+      [schools]
+      [users]
+      [sessions]
+      [user_schools]
+      [roles]
+      [permissions]
+      [user_school_roles]
+      [role_permissions]
+      [oauth_accounts]
+      [audit_logs]
+    }
+  }
+  
+  component "Identity Provider App" as idp_app
+  idp_app --> identity_db : "Reads/Writes"
+}
+
+package "Supabase Project: PPDB" {
+  database "PPDB Database" as ppdb_db {
+    frame "PPDB Tables" {
+      [registrations]
+      [applicants]
+      [documents]
+      [payments]
+      [selection_results]
+      [registration_periods]
+    }
+  }
+  
+  component "PPDB App" as ppdb_app
+  ppdb_app --> ppdb_db : "Reads/Writes\nRLS Enforced"
+}
+
+package "Supabase Project: SIS" {
+  database "SIS Database" as sis_db {
+    frame "SIS Tables" {
+      [students]
+      [teachers]
+      [parents]
+      [parent_students]
+      [classes]
+      [class_members]
+    }
+    
+    frame "Foreign Tables" as sis_foreign #LightBlue {
+      [identity.users] as sis_users
+      [identity.schools] as sis_schools
+      [identity.user_school_roles] as sis_roles
+    }
+  }
+  
+  component "SIS App" as sis_app
+  sis_app --> sis_db : "Reads/Writes\nRLS Enforced"
+}
+
+package "Supabase Project: Academic" {
+  database "Academic Database" as academic_db {
+    frame "Academic Tables" {
+      [subjects]
+      [schedules]
+      [grades]
+      [report_cards]
+      [curriculum]
+    }
+    
+    frame "Foreign Tables" as academic_foreign #LightBlue {
+      [identity.users] as academic_users
+      [identity.schools] as academic_schools
+    }
+  }
+  
+  component "Academic App" as academic_app
+  academic_app --> academic_db : "Reads/Writes\nRLS Enforced"
+}
+
+package "Supabase Project: LMS" {
+  database "LMS Database" as lms_db {
+    frame "LMS Tables" {
+      [courses]
+      [course_materials]
+      [assignments]
+      [submissions]
+      [quizzes]
+      [quiz_attempts]
+    }
+    
+    frame "Foreign Tables" as lms_foreign #LightBlue {
+      [identity.users] as lms_users
+      [identity.schools] as lms_schools
+    }
+  }
+  
+  component "LMS App" as lms_app
+  lms_app --> lms_db : "Reads/Writes\nRLS Enforced"
+}
+
+package "Supabase Project: Finance" {
+  database "Finance Database" as finance_db {
+    frame "Finance Tables" {
+      [fee_types]
+      [invoices]
+      [payments_table]
+      [transactions]
+    }
+    
+    frame "Foreign Tables" as finance_foreign #LightBlue {
+      [identity.users] as finance_users
+      [identity.schools] as finance_schools
+    }
+  }
+  
+  component "Finance App" as finance_app
+  finance_app --> finance_db : "Reads/Writes\nRLS Enforced"
+}
+
+package "Supabase Project: Analytics" {
+  database "Analytics Database" as analytics_db {
+    frame "Analytics Tables" {
+      [fact_attendance]
+      [fact_grades]
+      [fact_payments]
+      [dim_students]
+      [dim_time]
+    }
+  }
+  
+  component "Analytics App" as analytics_app
+  analytics_app --> analytics_db : "Reads/Writes"
+}
+
+' Foreign Data Wrapper connections
+sis_foreign -[#Blue,dashed]-> identity_db : "Foreign Data Wrapper\n(postgres_fdw)"
+academic_foreign -[#Blue,dashed]-> identity_db : "Foreign Data Wrapper\n(postgres_fdw)"
+lms_foreign -[#Blue,dashed]-> identity_db : "Foreign Data Wrapper\n(postgres_fdw)"
+finance_foreign -[#Blue,dashed]-> identity_db : "Foreign Data Wrapper\n(postgres_fdw)"
+
+' SSO connections
+idp_app -[#Green]-> ppdb_app : "Issues JWT"
+idp_app -[#Green]-> sis_app : "Issues JWT"
+idp_app -[#Green]-> academic_app : "Issues JWT"
+idp_app -[#Green]-> lms_app : "Issues JWT"
+idp_app -[#Green]-> finance_app : "Issues JWT"
+
+' Inter-app API calls
+ppdb_app -[#Orange]-> sis_app : "Export students\nInternal API"
+academic_app -[#Orange]-> sis_app : "Get student data\nInternal API"
+lms_app -[#Orange]-> academic_app : "Sync grades\nInternal API"
+
+' Analytics reads from all
+analytics_app -[#Purple,dashed]-> identity_db : "Read Replica\n(Read-only)"
+analytics_app -[#Purple,dashed]-> sis_db : "Read Replica\n(Read-only)"
+analytics_app -[#Purple,dashed]-> academic_db : "Read Replica\n(Read-only)"
+analytics_app -[#Purple,dashed]-> finance_db : "Read Replica\n(Read-only)"
+
+note top of identity_db
+  **Identity Database - Master**
+  - Single source of truth for users
+  - All authentication data
+  - RBAC: Roles & Permissions
+  - Multi-tenant: Schools
+  - Audit logs
+  
+  **Size**: ~10 tables
+  **Growth**: Low (user data)
+  **Critical**: YES (auth dependency)
+end note
+
+note bottom of ppdb_db
+  **Service Provider Databases**
+  Each SP has dedicated database:
+  
+  **Benefits:**
+  ✓ Isolated data
+  ✓ Independent scaling
+  ✓ Domain-specific optimization
+  ✓ No single point of failure
+  ✓ Easy to backup/restore per SP
+  
+  **Connection to Identity:**
+  - JWT verification (no direct DB access)
+  - Foreign Data Wrapper for user data
+  - Internal APIs for cross-SP data
+end note
+
+note right of sis_foreign
+  **Foreign Data Wrapper (FDW)**
+  
+  Allows querying Identity DB
+  from Service Provider DB:
+  
+  ```sql
+  SELECT s.*, u.email, u.name
+  FROM students s
+  JOIN identity.users u 
+    ON u.id = s.user_id
+  WHERE s.school_id = 'xxx'
+  ```
+  
+  **Read-only** for safety
+  Cached for performance
+end note
+
+note right of analytics_db
+  **Analytics Database Strategy:**
+  
+  Option A: Read replicas
+  - Supabase read replicas
+  - Direct SQL queries
+  - Real-time data
+  
+  Option B: ETL Pipeline
+  - Nightly data sync
+  - Transformed data
+  - Optimized for analytics
+  
+  Option C: Hybrid
+  - Real-time for dashboards
+  - ETL for complex reports
+end note
+
+legend right
+  |= Color |= Meaning |
+  | <#Green> | SSO/JWT Authentication |
+  | <#Blue> | Foreign Data Wrapper |
+  | <#Orange> | Internal API Calls |
+  | <#Purple> | Analytics Read Access |
+end legend
+
+@enduml

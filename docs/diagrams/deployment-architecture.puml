@@ -1,0 +1,301 @@
+@startuml Deployment_Architecture
+!theme plain
+
+title Deployment Architecture - Ekosistem Sekolah SaaS
+
+actor "End Users" as users
+
+cloud "DNS & CDN" {
+  node "Cloudflare" as cloudflare {
+    [DNS Management]
+    [DDoS Protection]
+    [SSL/TLS]
+    [CDN Cache]
+  }
+}
+
+cloud "Vercel Platform" {
+  node "Identity Provider\nRegion: Global" as idp_deployment {
+    [IdP Next.js App]
+    [Edge Functions]
+    [Static Assets]
+  }
+  
+  node "PPDB App\nRegion: Global" as ppdb_deployment {
+    [PPDB Next.js App]
+    [Edge Functions]
+    [Static Assets]
+  }
+  
+  node "SIS App\nRegion: Global" as sis_deployment {
+    [SIS Next.js App]
+    [Edge Functions]
+    [Static Assets]
+  }
+  
+  node "Academic App\nRegion: Global" as academic_deployment {
+    [Academic Next.js App]
+    [Edge Functions]
+    [Static Assets]
+  }
+  
+  node "LMS App\nRegion: Global" as lms_deployment {
+    [LMS Next.js App]
+    [Edge Functions]
+    [Static Assets]
+  }
+  
+  node "Finance App\nRegion: Global" as finance_deployment {
+    [Finance Next.js App]
+    [Edge Functions]
+    [Static Assets]
+  }
+  
+  node "Other Apps...\nRegion: Global" as other_apps {
+    [Attendance App]
+    [Exam App]
+    [Library App]
+    [Analytics App]
+    [Parent Portal]
+  }
+}
+
+cloud "Supabase Cloud" {
+  node "Identity Database\nRegion: Singapore" as identity_supabase {
+    database "PostgreSQL 15" as identity_pg
+    [Realtime Server]
+    [Storage Bucket]
+    [Edge Functions]
+    [Auth (unused)]
+  }
+  
+  node "PPDB Database\nRegion: Singapore" as ppdb_supabase {
+    database "PostgreSQL 15" as ppdb_pg
+    [Storage Bucket]
+  }
+  
+  node "SIS Database\nRegion: Singapore" as sis_supabase {
+    database "PostgreSQL 15" as sis_pg
+    [Storage Bucket]
+  }
+  
+  node "Academic Database\nRegion: Singapore" as academic_supabase {
+    database "PostgreSQL 15" as academic_pg
+  }
+  
+  node "LMS Database\nRegion: Singapore" as lms_supabase {
+    database "PostgreSQL 15" as lms_pg
+    [Storage Bucket]
+  }
+  
+  node "Finance Database\nRegion: Singapore" as finance_supabase {
+    database "PostgreSQL 15" as finance_pg
+  }
+  
+  node "Other Databases..." as other_dbs {
+    database "Attendance DB"
+    database "Exam DB"
+    database "Analytics DB"
+  }
+}
+
+cloud "External Services" {
+  node "Payment Gateway" as payment {
+    [Midtrans]
+    [Xendit]
+  }
+  
+  node "Communication" as communication {
+    [SendGrid\nEmail]
+    [Twilio\nSMS]
+    [Firebase\nPush Notifications]
+  }
+  
+  node "OAuth Providers" as oauth {
+    [Google OAuth]
+    [Microsoft OAuth]
+  }
+  
+  node "Monitoring" as monitoring {
+    [Sentry\nError Tracking]
+    [Vercel Analytics]
+    [PostHog\nProduct Analytics]
+  }
+}
+
+' User connections
+users --> cloudflare : "HTTPS Requests"
+
+' Cloudflare to apps
+cloudflare --> idp_deployment : "Route: auth.app.com"
+cloudflare --> ppdb_deployment : "Route: ppdb.*.app.com"
+cloudflare --> sis_deployment : "Route: sis.*.app.com"
+cloudflare --> academic_deployment : "Route: academic.*.app.com"
+cloudflare --> lms_deployment : "Route: lms.*.app.com"
+cloudflare --> finance_deployment : "Route: finance.*.app.com"
+cloudflare --> other_apps : "Route: *.*.app.com"
+
+' Apps to databases
+idp_deployment --> identity_pg : "Connection Pool\nSSL"
+ppdb_deployment --> ppdb_pg : "Connection Pool\nSSL"
+sis_deployment --> sis_pg : "Connection Pool\nSSL"
+academic_deployment --> academic_pg : "Connection Pool\nSSL"
+lms_deployment --> lms_pg : "Connection Pool\nSSL"
+finance_deployment --> finance_pg : "Connection Pool\nSSL"
+other_apps --> other_dbs : "Connection Pool\nSSL"
+
+' SSO relationships
+idp_deployment --> ppdb_deployment : "JWT Issuance"
+idp_deployment --> sis_deployment : "JWT Issuance"
+idp_deployment --> academic_deployment : "JWT Issuance"
+idp_deployment --> lms_deployment : "JWT Issuance"
+idp_deployment --> finance_deployment : "JWT Issuance"
+
+' Inter-app communication
+ppdb_deployment --> sis_deployment : "Internal API\nHTTPS"
+academic_deployment --> sis_deployment : "Internal API\nHTTPS"
+lms_deployment --> academic_deployment : "Internal API\nHTTPS"
+
+' Database to database (FDW)
+sis_pg -[dashed]-> identity_pg : "Foreign Data Wrapper\nRead-only"
+academic_pg -[dashed]-> identity_pg : "Foreign Data Wrapper\nRead-only"
+
+' External services
+idp_deployment --> oauth : "OAuth Flow"
+idp_deployment --> communication : "Email Verification"
+finance_deployment --> payment : "Payment Processing\nWebhooks"
+ppdb_deployment --> communication : "Notifications"
+
+' Monitoring
+idp_deployment --> monitoring : "Logs & Metrics"
+ppdb_deployment --> monitoring : "Logs & Metrics"
+sis_deployment --> monitoring : "Logs & Metrics"
+academic_deployment --> monitoring : "Logs & Metrics"
+lms_deployment --> monitoring : "Logs & Metrics"
+finance_deployment --> monitoring : "Logs & Metrics"
+
+' Notes
+note top of cloudflare
+  **Domain Strategy:**
+  
+  Main domain: app.com
+  
+  **Identity Provider:**
+  - auth.app.com
+  
+  **Service Providers (Multi-tenant):**
+  - ppdb.sma1.app.com
+  - sis.sma1.app.com
+  - lms.sma1.app.com
+  - finance.sma1.app.com
+  
+  OR Path-based:
+  - app.com/sma1/ppdb
+  - app.com/sma1/sis
+  
+  **Benefits:**
+  - Clear separation
+  - Easy SSL management
+  - Subdomain per school
+end note
+
+note bottom of idp_deployment
+  **Vercel Deployment:**
+  
+  **Features Used:**
+  ✓ Edge Network (Global)
+  ✓ Automatic HTTPS
+  ✓ Instant rollbacks
+  ✓ Preview deployments
+  ✓ Environment variables
+  ✓ Analytics
+  
+  **Build Settings:**
+  - Framework: Next.js
+  - Node.js version: 20.x
+  - Build command: turbo build
+  - Install command: pnpm install
+  
+  **Auto-scaling:**
+  - Horizontal scaling
+  - No server management
+end note
+
+note bottom of identity_supabase
+  **Supabase Projects:**
+  
+  **Database Features:**
+  ✓ PostgreSQL 15
+  ✓ Connection pooling
+  ✓ Row Level Security (RLS)
+  ✓ Real-time subscriptions
+  ✓ Automatic backups
+  ✓ Point-in-time recovery
+  ✓ Read replicas (Pro+)
+  
+  **Storage Features:**
+  ✓ S3-compatible
+  ✓ CDN delivery
+  ✓ Image transformations
+  ✓ Access control
+  
+  **Region:** Singapore
+  (Closest to Indonesia)
+end note
+
+note right of payment
+  **Payment Gateway:**
+  
+  **Midtrans:**
+  - Indonesian market leader
+  - Virtual Account
+  - E-wallet (GoPay, OVO, Dana)
+  - Credit Card
+  - QRIS
+  
+  **Xendit:**
+  - Alternative gateway
+  - Similar features
+  - Fallback option
+  
+  **Webhook validation:**
+  - Signature verification
+  - Idempotency handling
+end note
+
+note right of monitoring
+  **Observability Stack:**
+  
+  **Sentry:**
+  - Error tracking
+  - Performance monitoring
+  - Release tracking
+  - Alerting
+  
+  **Vercel Analytics:**
+  - Web vitals
+  - Page performance
+  - Real user monitoring
+  
+  **PostHog:**
+  - Product analytics
+  - Feature flags
+  - Session recordings
+  - Funnels & retention
+  
+  **Logs:**
+  - Vercel logs
+  - Supabase logs
+  - Centralized with Datadog (optional)
+end note
+
+legend bottom right
+  |= Component |= Technology |= Hosting |
+  | Frontend Apps | Next.js 14 | Vercel |
+  | Databases | PostgreSQL 15 | Supabase |
+  | DNS/CDN | DNS, Cache | Cloudflare |
+  | Storage | S3-compatible | Supabase Storage |
+  | Monitoring | Various | SaaS |
+end legend
+
+@enduml
