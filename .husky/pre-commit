@@ -1,0 +1,19 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit checks..."
+echo ""
+
+# Run lint-staged
+pnpm lint-staged
+
+# Check if lint-staged succeeded
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "❌ Pre-commit checks failed!"
+  echo "💡 Fix the errors above or use 'git commit --no-verify' to skip (not recommended)"
+  exit 1
+fi
+
+echo ""
+echo "✅ Pre-commit checks passed!"
