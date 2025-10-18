@@ -11,7 +11,8 @@
     "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md,css}\"",
     "clean": "turbo run clean && rm -rf node_modules",
     "type-check": "turbo run type-check",
-    "test": "turbo run test"
+    "test": "turbo run test",
+    "prepare": "husky install"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.7",
