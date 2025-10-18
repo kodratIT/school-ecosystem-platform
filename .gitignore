@@ -32,8 +32,14 @@ pnpm-debug.log*
 # Turborepo
 .turbo
 
+# TypeScript
+*.tsbuildinfo
+
 # IDEs
 .vscode/
 *.swp
 *.swo
 *~
+
+# TypeScript
+*.tsbuildinfo
