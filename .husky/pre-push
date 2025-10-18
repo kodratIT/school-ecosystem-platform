@@ -1,0 +1,21 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Running pre-push checks..."
+echo ""
+
+# Run type checking across all packages
+echo "📘 Type checking..."
+pnpm type-check
+
+# Check if type-check succeeded
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "❌ Type check failed!"
+  echo "💡 Fix TypeScript errors before pushing"
+  echo "💡 Or use 'git push --no-verify' to skip (not recommended)"
+  exit 1
+fi
+
+echo ""
+echo "✅ Pre-push checks passed!"
