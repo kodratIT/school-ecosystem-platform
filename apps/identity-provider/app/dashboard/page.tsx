@@ -1,6 +1,8 @@
 import { getCurrentUser } from '@/lib/auth-utils';
 import { StatsCards } from '@/components/dashboard/stats-cards';
 import { RecentActivity } from '@/components/dashboard/recent-activity';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
@@ -8,8 +10,10 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-2">Welcome back, {user?.name}!</p>
+        <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+        <p className="text-muted-foreground mt-2">
+          Welcome back, {user?.name}!
+        </p>
       </div>
 
       <StatsCards />
@@ -17,31 +21,46 @@ export default async function DashboardPage() {
       <div className="grid gap-6 md:grid-cols-2">
         <RecentActivity />
 
-        <div className="rounded-lg border bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-semibold text-gray-900">
-            Quick Actions
-          </h2>
-          <div className="space-y-3">
-            <button className="w-full rounded-lg border border-gray-300 py-3 text-left px-4 hover:bg-gray-50 transition-colors">
-              <p className="font-medium text-gray-900">Create New User</p>
-              <p className="text-sm text-gray-600">
-                Add a new user to the system
-              </p>
-            </button>
-            <button className="w-full rounded-lg border border-gray-300 py-3 text-left px-4 hover:bg-gray-50 transition-colors">
-              <p className="font-medium text-gray-900">Manage Roles</p>
-              <p className="text-sm text-gray-600">
-                Configure roles and permissions
-              </p>
-            </button>
-            <button className="w-full rounded-lg border border-gray-300 py-3 text-left px-4 hover:bg-gray-50 transition-colors">
-              <p className="font-medium text-gray-900">View Reports</p>
-              <p className="text-sm text-gray-600">
-                Access system reports and analytics
-              </p>
-            </button>
-          </div>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Button
+              variant="outline"
+              className="w-full justify-start h-auto py-3"
+            >
+              <div className="text-left">
+                <p className="font-medium">Create New User</p>
+                <p className="text-sm text-muted-foreground">
+                  Add a new user to the system
+                </p>
+              </div>
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-start h-auto py-3"
+            >
+              <div className="text-left">
+                <p className="font-medium">Manage Roles</p>
+                <p className="text-sm text-muted-foreground">
+                  Configure roles and permissions
+                </p>
+              </div>
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-start h-auto py-3"
+            >
+              <div className="text-left">
+                <p className="font-medium">View Reports</p>
+                <p className="text-sm text-muted-foreground">
+                  Access system reports and analytics
+                </p>
+              </div>
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
