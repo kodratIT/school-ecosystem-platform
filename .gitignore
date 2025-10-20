@@ -137,3 +137,4 @@ $RECYCLE.BIN/
 # Environment variables
 .env.local
 .env*.local
+supabase/supabase/backup/

@@ -74,6 +74,21 @@ importers:
 
   packages/config/tsconfig: {}
 
+  packages/types:
+    devDependencies:
+      '@repo/eslint-config':
+        specifier: workspace:*
+        version: link:../config/eslint-config
+      '@repo/tsconfig':
+        specifier: workspace:*
+        version: link:../config/tsconfig
+      eslint:
+        specifier: ^9.38.0
+        version: 9.38.0
+      typescript:
+        specifier: ^5.9.0
+        version: 5.9.3
+
   packages/ui:
     devDependencies:
       '@repo/eslint-config':
