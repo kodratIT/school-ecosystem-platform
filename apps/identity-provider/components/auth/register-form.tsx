@@ -31,14 +31,14 @@ export function RegisterForm() {
     setLoading(true);
 
     try {
-      const result = await signUp.email({
+      const result = await signUp({
         email,
         password,
         name,
       });
 
-      if (result.error) {
-        setError(result.error.message || 'Registration failed');
+      if (!result.success) {
+        setError(result.error || 'Registration failed');
         setLoading(false);
         return;
       }

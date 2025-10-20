@@ -17,13 +17,13 @@ export function LoginForm() {
     setLoading(true);
 
     try {
-      const result = await signIn.email({
+      const result = await signIn({
         email,
         password,
       });
 
-      if (result.error) {
-        setError(result.error.message || 'Invalid email or password');
+      if (!result.success) {
+        setError(result.error || 'Invalid email or password');
         setLoading(false);
         return;
       }
@@ -39,15 +39,8 @@ export function LoginForm() {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     setError('');
-    try {
-      await signIn.social({
-        provider: 'google',
-        callbackURL: '/dashboard',
-      });
-    } catch {
-      setError('Google sign-in failed');
-      setLoading(false);
-    }
+    setError('Google OAuth not yet implemented');
+    setLoading(false);
   };
 
   return (
