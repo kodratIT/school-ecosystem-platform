@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@radix-ui/react-separator": "^1.1.7",
     "@repo/database-identity": "workspace:*",
     "@repo/types": "workspace:*",
     "@repo/ui": "workspace:*",
@@ -17,11 +18,15 @@
     "@supabase/supabase-js": "^2.75.1",
     "bcryptjs": "^3.0.2",
     "better-auth": "^1.3.28",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "jose": "^6.1.0",
     "lucide-react": "^0.546.0",
     "next": "^15.1.6",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "tailwind-merge": "^3.3.1",
+    "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
