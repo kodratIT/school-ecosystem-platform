@@ -53,23 +53,30 @@ export function RegisterForm() {
       });
 
       if (!result.success) {
-        setError(result.error || 'Registration failed');
-        setLoading(false);
+        setTimeout(() => {
+          setError(result.error || 'Registration failed');
+          setLoading(false);
+        }, 0);
         return;
       }
 
       // Redirect to verify email page
       router.push('/verify-email?email=' + encodeURIComponent(data.email));
     } catch {
-      setError('An error occurred. Please try again.');
-      setLoading(false);
+      setTimeout(() => {
+        setError('An error occurred. Please try again.');
+        setLoading(false);
+      }, 0);
     }
   };
 
   return (
     <div className="space-y-4">
       {error && (
-        <div className="rounded-md bg-red-50 p-4 text-sm text-red-800">
+        <div
+          key={error}
+          className="rounded-md bg-red-50 p-4 text-sm text-red-800"
+        >
           {error}
         </div>
       )}

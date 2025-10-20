@@ -39,16 +39,21 @@ export function LoginForm() {
       });
 
       if (!result.success) {
-        setError(result.error || 'Invalid email or password');
-        setLoading(false);
+        // Use setTimeout to avoid setState during render
+        setTimeout(() => {
+          setError(result.error || 'Invalid email or password');
+          setLoading(false);
+        }, 0);
         return;
       }
 
       router.push(from);
       router.refresh();
     } catch {
-      setError('An error occurred. Please try again.');
-      setLoading(false);
+      setTimeout(() => {
+        setError('An error occurred. Please try again.');
+        setLoading(false);
+      }, 0);
     }
   };
 
@@ -62,7 +67,10 @@ export function LoginForm() {
   return (
     <div className="space-y-4">
       {error && (
-        <div className="rounded-md bg-red-50 p-4 text-sm text-red-800">
+        <div
+          key={error}
+          className="rounded-md bg-red-50 p-4 text-sm text-red-800"
+        >
           {error}
         </div>
       )}
