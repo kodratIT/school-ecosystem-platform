@@ -23,27 +23,6 @@ export type Paginated<T> = {
 };
 
 /**
- * API Response wrapper
- */
-export type APIResponse<T = unknown> = {
-  success: true;
-  data: T;
-  message?: string;
-};
-
-/**
- * API Error response
- */
-export type APIError = {
-  success: false;
-  error: {
-    code: string;
-    message: string;
-    details?: unknown;
-  };
-};
-
-/**
  * Result type (success or error)
  */
 export type Result<T, E = Error> =
