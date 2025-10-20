@@ -1,4 +1,11 @@
-// Main exports for @repo/validators package
-// Module exports will be added as validators are implemented
+// Common validators
+export * from './common';
 
-export {};
+// Auth validators
+export * from './auth';
+
+// Student validators
+export * from './student';
+
+// Academic validators
+export * from './academic';
