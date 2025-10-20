@@ -38,6 +38,27 @@ interface SchoolsGridProps {
 }
 
 export function SchoolsGrid({ schools }: SchoolsGridProps) {
+  const handleDelete = async (schoolId: string) => {
+    if (!confirm('Are you sure you want to delete this school?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/schools/${schoolId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete school');
+      }
+
+      window.location.reload();
+    } catch (error) {
+      alert('Error deleting school');
+      console.error(error);
+    }
+  };
+
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       {schools.map((school) => (
