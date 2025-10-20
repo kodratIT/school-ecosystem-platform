@@ -8,7 +8,7 @@ interface User {
   id: string;
   email: string;
   name: string;
-  role: string;
+  role?: string;
 }
 
 interface DashboardNavProps {
@@ -43,7 +43,7 @@ export function DashboardNav({ user }: DashboardNavProps) {
 
   const filteredItems = navItems.filter((item) => {
     if (!item.roles) return true;
-    return item.roles.includes(user.role);
+    return user.role && item.roles.includes(user.role);
   });
 
   return (

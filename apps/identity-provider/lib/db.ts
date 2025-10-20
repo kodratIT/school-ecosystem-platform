@@ -80,7 +80,14 @@ export async function createUser(userData: {
   email: string;
   name: string;
   password_hash: string;
-  role: string;
+  role?:
+    | 'super_admin'
+    | 'school_admin'
+    | 'teacher'
+    | 'student'
+    | 'parent'
+    | 'finance_staff'
+    | 'staff';
   is_active: boolean;
 }) {
   const supabase = getSupabaseClient();
@@ -90,7 +97,7 @@ export async function createUser(userData: {
       email: userData.email,
       name: userData.name,
       password_hash: userData.password_hash,
-      role: userData.role,
+      role: userData.role || 'student',
       is_active: userData.is_active,
       email_verified: false,
     })
