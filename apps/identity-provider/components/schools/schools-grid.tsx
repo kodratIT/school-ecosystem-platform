@@ -71,7 +71,10 @@ export function SchoolsGrid({ schools }: SchoolsGridProps) {
                     Edit
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem className="text-red-600">
+                <DropdownMenuItem
+                  className="text-red-600"
+                  onClick={() => handleDelete(school.id)}
+                >
                   <Trash2 className="mr-2 h-4 w-4" />
                   Delete
                 </DropdownMenuItem>
