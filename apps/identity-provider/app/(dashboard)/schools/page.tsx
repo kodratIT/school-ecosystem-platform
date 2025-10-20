@@ -1,6 +1,7 @@
 import { getCurrentUser } from '@/lib/auth-utils';
 import { getSupabaseClient } from '@/lib/db';
 import { SchoolsGrid } from '@/components/schools/schools-grid';
+import { SchoolsExportButton } from '@/components/schools/schools-export-button';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
@@ -51,12 +52,15 @@ export default async function SchoolsPage() {
           <p className="text-gray-600">Manage schools in the ecosystem</p>
         </div>
 
-        <Link href="/schools/new">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Add School
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          <SchoolsExportButton schools={schools || []} />
+          <Link href="/schools/new">
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Add School
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <SchoolsGrid schools={schools || []} />

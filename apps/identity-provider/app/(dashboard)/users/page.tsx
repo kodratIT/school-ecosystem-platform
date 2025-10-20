@@ -3,7 +3,7 @@ import { getCurrentUser } from '@/lib/auth-utils';
 import { UsersTable } from '@/components/users/users-table';
 import { UsersFilters } from '@/components/users/users-filters';
 import { Button } from '@/components/ui/button';
-import { Plus, Download } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import Link from 'next/link';
 import { getSupabaseClient } from '@/lib/db';
 
@@ -60,10 +60,7 @@ export default async function UsersPage({
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline">
-            <Download className="mr-2 h-4 w-4" />
-            Export
-          </Button>
+          <ExportButton users={filteredUsers} />
           <Link href="/users/new">
             <Button>
               <Plus className="mr-2 h-4 w-4" />
