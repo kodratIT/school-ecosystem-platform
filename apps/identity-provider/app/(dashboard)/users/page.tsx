@@ -18,13 +18,36 @@ export default async function UsersPage({
     throw new Error('Unauthorized');
   }
 
+  // Pagination
+  const page = parseInt(searchParams.page || '1');
+  const itemsPerPage = 20;
+
   // Fetch users from database
   const supabase = getSupabaseClient();
+
+  // Count total
+  let countQuery = supabase
+    .from('users')
+    .select('*', { count: 'exact', head: true })
+    .is('deleted_at', null);
+
+  // Filter count by role
+  if (searchParams.role) {
+    countQuery = countQuery.eq('role', searchParams.role);
+  }
+
+  const { count } = await countQuery;
+
+  // Fetch paginated users
+  const from = (page - 1) * itemsPerPage;
+  const to = from + itemsPerPage - 1;
+
   let query = supabase
     .from('users')
     .select('*')
     .is('deleted_at', null)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .range(from, to);
 
   // Filter by school if not super_admin
   // Note: currentUser from auth doesn't have school_id yet
@@ -75,6 +98,13 @@ export default async function UsersPage({
       <Suspense fallback={<div>Loading...</div>}>
         <UsersTable users={filteredUsers} />
       </Suspense>
+
+      <Pagination
+        currentPage={page}
+        totalPages={Math.ceil((count || 0) / itemsPerPage)}
+        totalItems={count || 0}
+        itemsPerPage={itemsPerPage}
+      />
     </div>
   );
 }

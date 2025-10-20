@@ -32,6 +32,32 @@ interface RolesTableProps {
 }
 
 export function RolesTable({ roles }: RolesTableProps) {
+  const handleDeleteRole = async (roleId: string, isSystem: boolean) => {
+    if (isSystem) {
+      alert('System roles cannot be deleted');
+      return;
+    }
+
+    if (!confirm('Are you sure you want to delete this role?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/roles/${roleId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete role');
+      }
+
+      window.location.reload();
+    } catch (error) {
+      alert('Error deleting role');
+      console.error(error);
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -79,7 +105,10 @@ export function RolesTable({ roles }: RolesTableProps) {
                     </Link>
                   </DropdownMenuItem>
                   {!role.is_system && (
-                    <DropdownMenuItem className="text-red-600">
+                    <DropdownMenuItem
+                      className="text-red-600"
+                      onClick={() => handleDeleteRole(role.id, role.is_system)}
+                    >
                       <Trash2 className="mr-2 h-4 w-4" />
                       Delete
                     </DropdownMenuItem>

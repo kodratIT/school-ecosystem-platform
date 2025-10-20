@@ -136,6 +136,27 @@ export function UsersTable({ users }: UsersTableProps) {
     }
   };
 
+  const handleDeleteUser = async (userId: string) => {
+    if (!confirm('Are you sure you want to delete this user?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/users/${userId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete user');
+      }
+
+      window.location.reload();
+    } catch (error) {
+      alert('Error deleting user');
+      console.error(error);
+    }
+  };
+
   return (
     <div className="rounded-lg border bg-white">
       {selectedUsers.length > 0 && (
@@ -244,7 +265,10 @@ export function UsersTable({ users }: UsersTableProps) {
                       <Ban className="mr-2 h-4 w-4" />
                       {user.is_active ? 'Ban User' : 'Activate User'}
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="text-red-600">
+                    <DropdownMenuItem
+                      className="text-red-600"
+                      onClick={() => handleDeleteUser(user.id)}
+                    >
                       <Trash2 className="mr-2 h-4 w-4" />
                       Delete
                     </DropdownMenuItem>

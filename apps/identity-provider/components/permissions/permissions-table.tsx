@@ -24,6 +24,27 @@ interface PermissionsTableProps {
 }
 
 export function PermissionsTable({ permissions }: PermissionsTableProps) {
+  const handleDeletePermission = async (permissionId: string) => {
+    if (!confirm('Are you sure you want to delete this permission?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/permissions/${permissionId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete permission');
+      }
+
+      window.location.reload();
+    } catch (error) {
+      alert('Error deleting permission');
+      console.error(error);
+    }
+  };
+
   // Group by resource
   const grouped = permissions.reduce(
     (acc, perm) => {
@@ -89,7 +110,10 @@ export function PermissionsTable({ permissions }: PermissionsTableProps) {
                         Edit
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="text-red-600">
+                    <DropdownMenuItem
+                      className="text-red-600"
+                      onClick={() => handleDeletePermission(permission.id)}
+                    >
                       <Trash2 className="mr-2 h-4 w-4" />
                       Delete
                     </DropdownMenuItem>
