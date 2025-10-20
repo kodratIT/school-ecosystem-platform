@@ -18,6 +18,7 @@ export interface Session {
     email: string;
     name: string;
     avatar?: string | null;
+    role?: string;
   };
   expires: string;
 }
@@ -65,7 +66,7 @@ export async function getSession(): Promise<Session | null> {
   const supabase = getSupabaseClient();
   const { data: user } = await supabase
     .from('users')
-    .select('id, email, name, avatar')
+    .select('id, email, name, avatar, role')
     .eq('id', payload.userId)
     .eq('is_active', true)
     .is('deleted_at', null)
@@ -79,6 +80,7 @@ export async function getSession(): Promise<Session | null> {
       email: user.email,
       name: user.name,
       avatar: user.avatar,
+      role: user.role,
     },
     expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
   };

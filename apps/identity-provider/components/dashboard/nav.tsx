@@ -79,9 +79,11 @@ export function DashboardNav({ user }: DashboardNavProps) {
         <div className="px-3">
           <p className="text-sm font-medium text-gray-900">{user.name}</p>
           <p className="text-xs text-gray-500">{user.email}</p>
-          <p className="text-xs text-gray-400 mt-1 capitalize">
-            {user.role.replace('_', ' ')}
-          </p>
+          {user.role && (
+            <p className="text-xs text-gray-400 mt-1 capitalize">
+              {user.role.replace('_', ' ')}
+            </p>
+          )}
         </div>
       </div>
     </aside>

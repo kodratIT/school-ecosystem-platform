@@ -44,9 +44,11 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
           <div className="flex items-center gap-3 border-l pl-4">
             <div className="text-right">
               <p className="text-sm font-medium text-gray-900">{user.name}</p>
-              <p className="text-xs text-gray-500 capitalize">
-                {user.role.replace('_', ' ')}
-              </p>
+              {user.role && (
+                <p className="text-xs text-gray-500 capitalize">
+                  {user.role.replace('_', ' ')}
+                </p>
+              )}
             </div>
 
             <SignOutButton />
