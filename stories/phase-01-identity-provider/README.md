@@ -1,8 +1,8 @@
 # Phase 1 Stories: Identity Provider
 
-**Total Stories**: 10  
+**Total Stories**: 13 (updated for OpenID Connect)  
 **Status**: All Documented  
-**Duration**: 3 weeks
+**Duration**: 4 weeks (+1 week for OIDC)
 
 ---
 
@@ -25,21 +25,44 @@
 | [017](./STORY-017-initialize-idp-nextjs-app.md) | Initialize Identity Provider Next.js App | P0 | 700+ | ✅ Documented |
 | [018](./STORY-018-build-auth-pages.md) | Build Authentication Pages | P0 | 650+ | ✅ Documented |
 
-### Week 5: JWT & SSO
+### Week 3: OIDC Core 🆕
 
 | ID | Story Title | Priority | Lines | Status |
 |----|-------------|----------|-------|--------|
-| [019](./STORY-019-implement-jwt-service.md) | Implement JWT Service | P0 | 600+ | ✅ Documented |
+| [019](./STORY-019-implement-jwt-oidc-service.md) | JWT + OIDC Token Service | P0 | 1000+ | ✅ Documented |
+| [022](./STORY-022-oidc-discovery-endpoint.md) | OIDC Discovery Endpoint | P0 | 400+ | ✅ Documented |
+| [023](./STORY-023-oidc-userinfo-endpoint.md) | OIDC UserInfo Endpoint | P0 | 500+ | ✅ Documented |
+
+### Week 4: SSO & SDK 🆕
+
+| ID | Story Title | Priority | Lines | Status |
+|----|-------------|----------|-------|--------|
+| [021](./STORY-021-implement-sso.md) | OIDC SSO Implementation 🎉 | P0 | 700+ | ✅ Documented |
+| [024](./STORY-024-oidc-client-sdk.md) | OIDC Client SDK Package | P0 | 200+ | ✅ Documented |
 | [020](./STORY-020-build-dashboard-features.md) | Build Dashboard Features | P0 | 550+ | ✅ Documented |
-| [021](./STORY-021-implement-sso.md) | Implement Single Sign-On (SSO) 🎉 | P0 | 700+ | ✅ Documented |
 
 ---
 
 ## 📊 Progress
 
-- **Total**: 10 stories
-- **Documented**: 10 (100%)
+- **Total**: 13 stories (10 original + 3 OIDC)
+- **Documented**: 13 (100%)
 - **Implementation**: 0%
+
+## 🆕 OIDC Upgrade
+
+Phase 1 has been **upgraded to OpenID Connect**:
+- ✅ **STORY-019**: Enhanced for RS256 + ID tokens
+- ✅ **STORY-022**: NEW - Discovery endpoint (auto-config)
+- ✅ **STORY-023**: NEW - UserInfo endpoint
+- ✅ **STORY-024**: NEW - Client SDK package
+
+**Benefits:**
+- Industry standard compliance
+- Separation of identity (ID token) and authorization (access token)
+- Auto-discovery support
+- Better security with RS256
+- Easier third-party integrations
 
 ---
 
