@@ -44,6 +44,7 @@ interface UsersTableProps {
 
 export function UsersTable({ users }: UsersTableProps) {
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   const handleSelectAll = () => {
     if (selectedUsers.length === users.length) {
@@ -61,6 +62,80 @@ export function UsersTable({ users }: UsersTableProps) {
     }
   };
 
+  const handleBulkAction = async (
+    action: 'activate' | 'deactivate' | 'delete'
+  ) => {
+    const actionText =
+      action === 'activate'
+        ? 'activate'
+        : action === 'deactivate'
+          ? 'deactivate'
+          : 'delete';
+
+    if (
+      !confirm(
+        `Are you sure you want to ${actionText} ${selectedUsers.length} user(s)?`
+      )
+    ) {
+      return;
+    }
+
+    setBulkLoading(true);
+
+    try {
+      const response = await fetch('/api/users/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action,
+          userIds: selectedUsers,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Bulk action failed');
+      }
+
+      const data = await response.json();
+      alert(data.message);
+      window.location.reload();
+    } catch (error) {
+      alert(`Error performing ${actionText} action`);
+      console.error(error);
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const handleBanUser = async (userId: string, currentStatus: boolean) => {
+    const action = currentStatus ? 'deactivate' : 'activate';
+    const actionText = currentStatus ? 'ban' : 'activate';
+
+    if (!confirm(`Are you sure you want to ${actionText} this user?`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/users/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action,
+          userIds: [userId],
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Action failed');
+      }
+
+      window.location.reload();
+    } catch (error) {
+      alert(`Error ${actionText}ing user`);
+      console.error(error);
+    }
+  };
+
   return (
     <div className="rounded-lg border bg-white">
       {selectedUsers.length > 0 && (
@@ -70,11 +145,29 @@ export function UsersTable({ users }: UsersTableProps) {
               {selectedUsers.length} user(s) selected
             </p>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm">
-                Bulk Edit
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleBulkAction('activate')}
+                disabled={bulkLoading}
+              >
+                {bulkLoading ? 'Processing...' : 'Activate'}
               </Button>
-              <Button variant="outline" size="sm">
-                Delete
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleBulkAction('deactivate')}
+                disabled={bulkLoading}
+              >
+                {bulkLoading ? 'Processing...' : 'Deactivate'}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleBulkAction('delete')}
+                disabled={bulkLoading}
+              >
+                {bulkLoading ? 'Processing...' : 'Delete'}
               </Button>
             </div>
           </div>
@@ -145,9 +238,11 @@ export function UsersTable({ users }: UsersTableProps) {
                         Edit
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => handleBanUser(user.id, user.is_active)}
+                    >
                       <Ban className="mr-2 h-4 w-4" />
-                      Ban User
+                      {user.is_active ? 'Ban User' : 'Activate User'}
                     </DropdownMenuItem>
                     <DropdownMenuItem className="text-red-600">
                       <Trash2 className="mr-2 h-4 w-4" />
