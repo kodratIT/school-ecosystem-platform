@@ -74,17 +74,17 @@ supabase status
 
 ### Via Connection String
 
-```bash
-# From .env.local
-DATABASE_URL=postgresql://postgres:[PASSWORD]@db.[your-project-ref].supabase.co:5432/postgres
-```
+Connection string is available in `.env.local`:
+- Variable: `DATABASE_URL`
+- Format: PostgreSQL connection string
+- See Supabase dashboard → Settings → Database for details
 
 ## 🔐 Environment Variables
 
 Credentials are stored in `.env.local` (root directory):
 
 - `IDENTITY_DB_URL` - Supabase project URL
-- `IDENTITY_DB_SERVICE_KEY` - Service role key (SECRET!)
+- `IDENTITY_DB_SERVICE_KEY` - Service role key (confidential)
 - `NEXT_PUBLIC_IDENTITY_DB_ANON_KEY` - Anonymous key (public)
 - `DATABASE_URL` - PostgreSQL connection string
 
