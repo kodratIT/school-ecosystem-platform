@@ -1,69 +1,48 @@
 import { getCurrentUser } from '@/lib/auth-utils';
-import { redirect } from 'next/navigation';
-import { SignOutButton } from '@/components/auth/signout-button';
+import { StatsCards } from '@/components/dashboard/stats-cards';
+import { RecentActivity } from '@/components/dashboard/recent-activity';
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
 
-  if (!user) {
-    redirect('/login');
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 justify-between">
-            <div className="flex">
-              <div className="flex flex-shrink-0 items-center">
-                <h1 className="text-xl font-bold text-gray-900">
-                  Identity Provider
-                </h1>
-              </div>
-            </div>
-            <div className="flex items-center">
-              <span className="mr-4 text-sm text-gray-700">{user.email}</span>
-              <SignOutButton />
-            </div>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+        <p className="text-gray-600 mt-2">Welcome back, {user?.name}!</p>
+      </div>
+
+      <StatsCards />
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <RecentActivity />
+
+        <div className="rounded-lg border bg-white p-6 shadow-sm">
+          <h2 className="mb-4 text-lg font-semibold text-gray-900">
+            Quick Actions
+          </h2>
+          <div className="space-y-3">
+            <button className="w-full rounded-lg border border-gray-300 py-3 text-left px-4 hover:bg-gray-50 transition-colors">
+              <p className="font-medium text-gray-900">Create New User</p>
+              <p className="text-sm text-gray-600">
+                Add a new user to the system
+              </p>
+            </button>
+            <button className="w-full rounded-lg border border-gray-300 py-3 text-left px-4 hover:bg-gray-50 transition-colors">
+              <p className="font-medium text-gray-900">Manage Roles</p>
+              <p className="text-sm text-gray-600">
+                Configure roles and permissions
+              </p>
+            </button>
+            <button className="w-full rounded-lg border border-gray-300 py-3 text-left px-4 hover:bg-gray-50 transition-colors">
+              <p className="font-medium text-gray-900">View Reports</p>
+              <p className="text-sm text-gray-600">
+                Access system reports and analytics
+              </p>
+            </button>
           </div>
         </div>
-      </nav>
-
-      <main className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <div className="rounded-lg border-4 border-dashed border-gray-200 p-8">
-            <h2 className="mb-4 text-2xl font-bold text-gray-900">
-              Welcome, {user.name}!
-            </h2>
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-700">
-                  User Information
-                </h3>
-                <dl className="mt-2 space-y-2">
-                  <div>
-                    <dt className="inline font-medium text-gray-600">Email:</dt>
-                    <dd className="inline ml-2 text-gray-900">{user.email}</dd>
-                  </div>
-                  <div>
-                    <dt className="inline font-medium text-gray-600">
-                      User ID:
-                    </dt>
-                    <dd className="inline ml-2 text-gray-900">{user.id}</dd>
-                  </div>
-                </dl>
-              </div>
-
-              <div className="rounded-md bg-blue-50 p-4">
-                <p className="text-sm text-blue-800">
-                  🎉 Authentication is working! This is a protected page that
-                  requires authentication.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </main>
+      </div>
     </div>
   );
 }
