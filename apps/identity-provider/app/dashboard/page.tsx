@@ -1,6 +1,6 @@
 import { getCurrentUser } from '@/lib/auth-utils';
 import { redirect } from 'next/navigation';
-import { signOut } from '@/lib/auth-client';
+import { SignOutButton } from '@/components/auth/signout-button';
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
@@ -23,14 +23,7 @@ export default async function DashboardPage() {
             </div>
             <div className="flex items-center">
               <span className="mr-4 text-sm text-gray-700">{user.email}</span>
-              <form action={signOut as never}>
-                <button
-                  type="submit"
-                  className="rounded-md bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700"
-                >
-                  Sign out
-                </button>
-              </form>
+              <SignOutButton />
             </div>
           </div>
         </div>
