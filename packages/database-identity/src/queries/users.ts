@@ -53,7 +53,14 @@ export async function getUserByEmail(email: string): Promise<User | null> {
  */
 export async function getUsersBySchool(
   schoolId: string,
-  role?: string
+  role?:
+    | 'super_admin'
+    | 'school_admin'
+    | 'teacher'
+    | 'student'
+    | 'parent'
+    | 'finance_staff'
+    | 'staff'
 ): Promise<User[]> {
   const supabase = getSupabaseClient();
 
@@ -77,7 +84,16 @@ export async function getUsersBySchool(
 /**
  * Get users by role
  */
-export async function getUsersByRole(role: string): Promise<User[]> {
+export async function getUsersByRole(
+  role:
+    | 'super_admin'
+    | 'school_admin'
+    | 'teacher'
+    | 'student'
+    | 'parent'
+    | 'finance_staff'
+    | 'staff'
+): Promise<User[]> {
   const supabase = getSupabaseClient();
 
   const { data, error } = await supabase
@@ -166,12 +182,19 @@ export async function updateLastLogin(
 ): Promise<void> {
   const supabase = getSupabaseClient();
 
+  // Get current user to increment login count
+  const { data: user } = await supabase
+    .from('users')
+    .select('login_count')
+    .eq('id', userId)
+    .single();
+
   const { error } = await supabase
     .from('users')
     .update({
       last_login_at: new Date().toISOString(),
       last_login_ip: ip,
-      login_count: supabase.rpc('increment', { row_id: userId }),
+      login_count: (user?.login_count || 0) + 1,
     })
     .eq('id', userId);
 

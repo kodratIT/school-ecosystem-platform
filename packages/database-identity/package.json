@@ -21,12 +21,13 @@
     "lint": "eslint src/"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.39.0",
-    "@repo/types": "workspace:*"
+    "@repo/types": "workspace:*",
+    "@supabase/supabase-js": "^2.39.0"
   },
   "devDependencies": {
-    "@repo/tsconfig": "workspace:*",
     "@repo/eslint-config": "workspace:*",
+    "@repo/tsconfig": "workspace:*",
+    "@types/node": "^24.8.1",
     "tsup": "^8.0.1",
     "typescript": "^5.3.3"
   }

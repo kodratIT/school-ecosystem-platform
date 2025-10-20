@@ -22,11 +22,11 @@ export async function logAudit(params: {
   const { data, error } = await supabase.rpc('log_audit', {
     p_action: params.action,
     p_resource_type: params.resourceType,
-    p_resource_id: params.resourceId || null,
-    p_description: params.description || null,
-    p_old_values: (params.oldValues as Json) || null,
-    p_new_values: (params.newValues as Json) || null,
-    p_metadata: (params.metadata as Json) || null,
+    p_resource_id: params.resourceId,
+    p_description: params.description,
+    p_old_values: params.oldValues as Json,
+    p_new_values: params.newValues as Json,
+    p_metadata: params.metadata as Json,
   });
 
   if (error) handleDatabaseError(error);
