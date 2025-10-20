@@ -1,5 +1,4 @@
 import { auth } from './auth';
-import { cookies } from 'next/headers';
 import { cache } from 'react';
 
 /**
@@ -7,11 +6,7 @@ import { cache } from 'react';
  * Cached per request
  */
 export const getCurrentSession = cache(async () => {
-  const session = await auth.api.getSession({
-    headers: await cookies(),
-  });
-
-  return session;
+  return await auth.getSession();
 });
 
 /**
