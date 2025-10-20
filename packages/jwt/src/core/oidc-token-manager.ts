@@ -214,13 +214,17 @@ export class OIDCTokenManager {
       string | number
     >;
 
+    if (!jwk.n || !jwk.e) {
+      throw new Error('Invalid JWK: missing n or e components');
+    }
+
     const key: JWK = {
       kty: 'RSA',
       use: 'sig',
       kid: this.keyId,
       alg: 'RS256',
-      n: jwk.n,
-      e: jwk.e,
+      n: jwk.n as string,
+      e: jwk.e as string,
     };
 
     return {
