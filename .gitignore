@@ -134,3 +134,6 @@ $RECYCLE.BIN/
 
 # But allow migration files
 !migrations/*.sql
+# Environment variables
+.env.local
+.env*.local
