@@ -65,6 +65,9 @@ importers:
       '@repo/validators':
         specifier: workspace:*
         version: link:../../packages/validators
+      '@supabase/supabase-js':
+        specifier: ^2.75.1
+        version: 2.75.1
       bcryptjs:
         specifier: ^3.0.2
         version: 3.0.2

@@ -4,7 +4,7 @@
  * This gives us full control over our database schema
  */
 
-import { getSupabaseClient } from '@repo/database-identity';
+import { getSupabaseClient } from '@/lib/db';
 import { cookies } from 'next/headers';
 import { SignJWT, jwtVerify } from 'jose';
 
