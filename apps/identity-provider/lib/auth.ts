@@ -5,6 +5,13 @@ export const auth = betterAuth({
   database: {
     provider: 'postgres',
     url: process.env.IDENTITY_DB_URL!,
+    // Use custom table names to match our existing schema
+    schema: {
+      user: 'users',
+      session: 'user_sessions',
+      account: 'oauth_accounts',
+      verification: 'verifications',
+    },
   },
 
   emailAndPassword: {
