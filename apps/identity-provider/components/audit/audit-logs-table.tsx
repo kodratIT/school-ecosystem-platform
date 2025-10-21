@@ -7,7 +7,7 @@ import Link from 'next/link';
 
 interface AuditLog {
   id: string;
-  user_id: string;
+  user_id: string | null;
   action: string;
   resource_type?: string | null;
   resource_id?: string | null;
