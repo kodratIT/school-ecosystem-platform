@@ -7,6 +7,9 @@ import {
   updateClientLastUsed,
   supportsGrantType,
   validateAndConsumeAuthorizationCode,
+  logTokenIssued,
+  logTokenValidationFailed,
+  logPKCEVerificationFailed,
 } from '@repo/database-identity';
 import { validatePKCETokenParams } from '@/lib/pkce';
 import { z } from 'zod';
@@ -27,6 +30,13 @@ const tokenManager = new TokenManager(process.env.JWT_SECRET!);
  * Exchange authorization code for JWT tokens
  */
 export async function POST(request: NextRequest) {
+  // Get IP and user agent for audit logging
+  const ip =
+    request.headers.get('x-forwarded-for')?.split(',')[0] ||
+    request.headers.get('x-real-ip') ||
+    'unknown';
+  const userAgent = request.headers.get('user-agent') || 'unknown';
+
   try {
     const body = await request.json();
 
@@ -40,6 +50,15 @@ export async function POST(request: NextRequest) {
     );
 
     if (!client) {
+      // LOG: Invalid client credentials
+      await logTokenValidationFailed({
+        client_id: params.client_id,
+        grant_type: params.grant_type,
+        error: 'Invalid client credentials',
+        ip_address: ip,
+        user_agent: userAgent,
+      });
+
       return NextResponse.json(
         {
           error: 'invalid_client',
@@ -72,13 +91,22 @@ export async function POST(request: NextRequest) {
         params.redirect_uri
       );
     } catch (error) {
+      const errorMsg =
+        error instanceof Error ? error.message : 'Invalid authorization code';
+
+      // LOG: Authorization code validation failed
+      await logTokenValidationFailed({
+        client_id: params.client_id,
+        grant_type: params.grant_type,
+        error: errorMsg,
+        ip_address: ip,
+        user_agent: userAgent,
+      });
+
       return NextResponse.json(
         {
           error: 'invalid_grant',
-          error_description:
-            error instanceof Error
-              ? error.message
-              : 'Invalid authorization code',
+          error_description: errorMsg,
         },
         { status: 400 }
       );
@@ -92,6 +120,16 @@ export async function POST(request: NextRequest) {
     );
 
     if (!pkceValidation.valid) {
+      // LOG: PKCE verification failed
+      await logPKCEVerificationFailed({
+        user_id: authCode.user_id,
+        client_id: params.client_id,
+        grant_type: params.grant_type,
+        error: pkceValidation.errorDescription || 'PKCE verification failed',
+        ip_address: ip,
+        user_agent: userAgent,
+      });
+
       return NextResponse.json(
         {
           error: pkceValidation.error || 'invalid_grant',
@@ -142,6 +180,16 @@ export async function POST(request: NextRequest) {
       },
       params.redirect_uri // Use redirect_uri as audience
     );
+
+    // LOG: Token issued successfully
+    await logTokenIssued({
+      user_id: user.id,
+      client_id: params.client_id,
+      grant_type: params.grant_type,
+      scopes: authCode.scope || [],
+      ip_address: ip,
+      user_agent: userAgent,
+    });
 
     // Return tokens (authorization code already marked as used in database)
     return NextResponse.json({

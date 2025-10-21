@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { OIDCTokenManager } from '@repo/jwt';
-import { getUserById } from '@repo/database-identity';
+import { getUserById, logUserInfoAccessed } from '@repo/database-identity';
 import type { AccessTokenPayload } from '@repo/jwt';
 
 const tokenManager = new OIDCTokenManager();
@@ -25,6 +25,13 @@ export async function POST(request: NextRequest) {
 }
 
 async function handleUserInfoRequest(request: NextRequest) {
+  // Get IP and user agent for audit logging
+  const ip =
+    request.headers.get('x-forwarded-for')?.split(',')[0] ||
+    request.headers.get('x-real-ip') ||
+    'unknown';
+  const userAgent = request.headers.get('user-agent') || 'unknown';
+
   try {
     // Extract access token from Authorization header
     const authHeader = request.headers.get('Authorization');
@@ -92,6 +99,16 @@ async function handleUserInfoRequest(request: NextRequest) {
     // Build claims based on scope
     const scopes = payload.scope.split(' ');
     const claims = buildUserInfoClaims(user, scopes);
+
+    // LOG: UserInfo accessed successfully
+    await logUserInfoAccessed({
+      user_id: user.id as string,
+      client_id: payload.aud as string,
+      grant_type: 'access_token',
+      scopes,
+      ip_address: ip,
+      user_agent: userAgent,
+    });
 
     return NextResponse.json(claims, {
       headers: {
