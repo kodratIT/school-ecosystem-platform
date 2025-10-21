@@ -17,6 +17,8 @@ export async function POST(request: NextRequest) {
       phone,
       email,
       website,
+      principal_name,
+      principal_phone,
       is_active,
     } = body;
 
