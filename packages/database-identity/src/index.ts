@@ -97,6 +97,21 @@ export type {
   TokenWithUser,
 } from './queries/password-reset';
 
+// Query Builders - Authorization Codes
+export {
+  createAuthorizationCode,
+  getAuthorizationCodeByCode,
+  markAuthorizationCodeUsed,
+  deleteAuthorizationCode,
+  cleanupExpiredAuthorizationCodes,
+  getActiveAuthorizationCodesForUser,
+  validateAndConsumeAuthorizationCode,
+} from './queries/authorization-codes';
+export type {
+  AuthorizationCode,
+  CreateAuthorizationCodeInput,
+} from './queries/authorization-codes';
+
 // Utils - Hash
 export {
   hashPassword,
