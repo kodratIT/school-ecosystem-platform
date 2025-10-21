@@ -11,6 +11,7 @@ import {
   ChevronDown,
   Key,
   ScrollText,
+  Lock,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -46,6 +47,12 @@ export function DashboardNav({ user }: DashboardNavProps) {
       href: '/schools',
       label: 'Schools',
       icon: Building2,
+      roles: ['super_admin'],
+    },
+    {
+      href: '/oauth-clients',
+      label: 'OAuth Clients',
+      icon: Lock,
       roles: ['super_admin'],
     },
     {
