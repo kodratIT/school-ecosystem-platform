@@ -46,6 +46,8 @@ export async function POST(request: NextRequest) {
         phone,
         email,
         website: website || null,
+        principal_name: principal_name || 'TBD',
+        principal_phone: principal_phone || '-',
         is_active: is_active ?? true,
       })
       .select()
