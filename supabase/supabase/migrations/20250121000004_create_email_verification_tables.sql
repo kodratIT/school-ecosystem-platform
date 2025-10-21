@@ -19,12 +19,12 @@ CREATE TABLE IF NOT EXISTS email_verifications (
 );
 
 -- Indexes for performance
-CREATE INDEX idx_email_verifications_token ON email_verifications(token) 
+CREATE INDEX IF NOT EXISTS idx_email_verifications_token ON email_verifications(token) 
   WHERE verified_at IS NULL;
 
-CREATE INDEX idx_email_verifications_user_id ON email_verifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_email_verifications_user_id ON email_verifications(user_id);
 
-CREATE INDEX idx_email_verifications_expires_at ON email_verifications(expires_at)
+CREATE INDEX IF NOT EXISTS idx_email_verifications_expires_at ON email_verifications(expires_at)
   WHERE verified_at IS NULL;
 
 -- Comments
@@ -45,10 +45,10 @@ CREATE TABLE IF NOT EXISTS email_resend_attempts (
 );
 
 -- Indexes for rate limiting queries
-CREATE INDEX idx_email_resend_attempts_email 
+CREATE INDEX IF NOT EXISTS idx_email_resend_attempts_email 
   ON email_resend_attempts(email, attempted_at);
 
-CREATE INDEX idx_email_resend_attempts_ip 
+CREATE INDEX IF NOT EXISTS idx_email_resend_attempts_ip 
   ON email_resend_attempts(ip_address, attempted_at);
 
 -- Comments
