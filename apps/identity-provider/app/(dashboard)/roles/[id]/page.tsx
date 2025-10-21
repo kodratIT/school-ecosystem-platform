@@ -40,7 +40,7 @@ export default async function EditRolePage({
     rolePermissions?.map((rp) => rp.permission_id) || [];
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-5xl space-y-6">
       <div>
         <Link
           href="/roles"
@@ -56,9 +56,10 @@ export default async function EditRolePage({
         <p className="text-gray-600">Update role information and permissions</p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-lg border bg-white p-6">
-          <h2 className="mb-4 text-lg font-semibold">Role Information</h2>
+      {/* Role Information */}
+      <div className="rounded-lg border bg-white p-6 shadow-sm">
+        <h2 className="mb-4 text-lg font-semibold">Role Information</h2>
+        <div className="max-w-2xl">
           <RoleForm
             initialData={{
               name: role.name,
@@ -68,15 +69,21 @@ export default async function EditRolePage({
             roleId={role.id}
           />
         </div>
+      </div>
 
-        <div className="rounded-lg border bg-white p-6">
-          <h2 className="mb-4 text-lg font-semibold">Permissions</h2>
-          <PermissionsManager
-            roleId={role.id}
-            allPermissions={allPermissions || []}
-            assignedPermissionIds={assignedPermissionIds}
-          />
+      {/* Permissions */}
+      <div className="rounded-lg border bg-white p-6 shadow-sm">
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold">Manage Permissions</h2>
+          <p className="text-sm text-gray-600">
+            Select which permissions this role should have
+          </p>
         </div>
+        <PermissionsManager
+          roleId={role.id}
+          allPermissions={allPermissions || []}
+          assignedPermissionIds={assignedPermissionIds}
+        />
       </div>
     </div>
   );

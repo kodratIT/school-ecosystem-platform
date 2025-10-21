@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Check } from 'lucide-react';
+import { Check, Lock } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 interface Permission {
   id: string;
@@ -84,19 +85,50 @@ export function PermissionsManager({
         </div>
       )}
 
-      <div className="max-h-96 space-y-4 overflow-y-auto">
+      {/* Stats */}
+      <div className="flex items-center justify-between rounded-lg bg-blue-50 p-4">
+        <div className="flex items-center gap-2">
+          <Lock className="h-5 w-5 text-blue-600" />
+          <span className="text-sm font-medium text-blue-900">
+            {selected.length} of {allPermissions.length} permissions selected
+          </span>
+        </div>
+        <Button onClick={handleSave} disabled={loading} size="sm">
+          {loading ? 'Saving...' : 'Save Changes'}
+        </Button>
+      </div>
+
+      {/* Permissions Grid */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {Object.entries(groupedPermissions).map(([resource, permissions]) => (
-          <div key={resource} className="rounded-lg border p-4">
-            <h3 className="mb-3 font-medium capitalize">{resource}</h3>
+          <div
+            key={resource}
+            className="rounded-lg border bg-gradient-to-br from-white to-gray-50 p-4 shadow-sm"
+          >
+            <div className="mb-3 flex items-center gap-2 border-b pb-2">
+              <div className="rounded bg-blue-600 p-1">
+                <Lock className="h-3 w-3 text-white" />
+              </div>
+              <h3 className="font-semibold capitalize text-gray-900">
+                {resource}
+              </h3>
+              <Badge variant="secondary" className="ml-auto text-xs">
+                {permissions.length}
+              </Badge>
+            </div>
             <div className="space-y-2">
               {permissions.map((permission) => {
                 const isSelected = selected.includes(permission.id);
                 return (
                   <label
                     key={permission.id}
-                    className="flex cursor-pointer items-center gap-3 rounded p-2 hover:bg-gray-50"
+                    className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-all ${
+                      isSelected
+                        ? 'border-blue-300 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                    }`}
                   >
-                    <div className="relative">
+                    <div className="relative mt-0.5 flex-shrink-0">
                       <input
                         type="checkbox"
                         checked={isSelected}
@@ -107,12 +139,16 @@ export function PermissionsManager({
                         <Check className="pointer-events-none absolute inset-0 h-4 w-4 text-blue-600" />
                       )}
                     </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">
+                    <div className="min-w-0 flex-1">
+                      <p
+                        className={`text-sm font-medium ${
+                          isSelected ? 'text-blue-900' : 'text-gray-900'
+                        }`}
+                      >
                         {permission.action}
                       </p>
                       {permission.description && (
-                        <p className="text-xs text-gray-500">
+                        <p className="mt-1 text-xs text-gray-500 line-clamp-2">
                           {permission.description}
                         </p>
                       )}
@@ -123,15 +159,6 @@ export function PermissionsManager({
             </div>
           </div>
         ))}
-      </div>
-
-      <div className="flex gap-2 border-t pt-4">
-        <Button onClick={handleSave} disabled={loading}>
-          {loading ? 'Saving...' : 'Save Permissions'}
-        </Button>
-        <p className="self-center text-sm text-gray-600">
-          {selected.length} of {allPermissions.length} selected
-        </p>
       </div>
     </div>
   );

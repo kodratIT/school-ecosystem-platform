@@ -81,15 +81,20 @@ export function PermissionsTable({ permissions }: PermissionsTableProps) {
           </div>
 
           {/* Table */}
-          <div className="overflow-hidden">
-            <table className="w-full">
+          <div className="overflow-x-auto">
+            <table className="w-full table-fixed">
+              <colgroup>
+                <col className="w-48" />
+                <col />
+                <col className="w-32" />
+              </colgroup>
               <thead className="bg-gray-50 text-xs uppercase text-gray-700">
                 <tr>
                   <th className="px-6 py-3 text-left font-medium">Action</th>
                   <th className="px-6 py-3 text-left font-medium">
                     Description
                   </th>
-                  <th className="px-6 py-3 text-right font-medium">Actions</th>
+                  <th className="px-6 py-3 text-center font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -99,45 +104,52 @@ export function PermissionsTable({ permissions }: PermissionsTableProps) {
                     className="transition hover:bg-gray-50"
                   >
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <Badge
-                          variant="secondary"
-                          className="bg-blue-100 text-blue-700"
-                        >
-                          {permission.action}
-                        </Badge>
-                      </div>
+                      <Badge
+                        variant="secondary"
+                        className="inline-flex bg-blue-100 text-blue-700"
+                      >
+                        {permission.action}
+                      </Badge>
                     </td>
                     <td className="px-6 py-4">
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-gray-600 line-clamp-2">
                         {permission.description || '-'}
                       </p>
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem asChild>
-                            <Link href={`/permissions/${permission.id}`}>
-                              <Edit className="mr-2 h-4 w-4" />
-                              Edit
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="text-red-600"
-                            onClick={() =>
-                              handleDeletePermission(permission.id)
-                            }
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                    <td className="px-6 py-4">
+                      <div className="flex justify-center">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-40">
+                            <DropdownMenuItem asChild>
+                              <Link
+                                href={`/permissions/${permission.id}`}
+                                className="cursor-pointer"
+                              >
+                                <Edit className="mr-2 h-4 w-4" />
+                                Edit
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="cursor-pointer text-red-600"
+                              onClick={() =>
+                                handleDeletePermission(permission.id)
+                              }
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </td>
                   </tr>
                 ))}
