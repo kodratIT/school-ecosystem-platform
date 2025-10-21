@@ -12,12 +12,11 @@ export async function POST(request: NextRequest) {
 
     const supabase = getSupabaseClient();
 
-    // Check if role name already exists
+    // Check if role name already exists (no soft delete)
     const { data: existing } = await supabase
       .from('roles')
       .select('id')
       .eq('name', name)
-      .is('deleted_at', null)
       .single();
 
     if (existing) {

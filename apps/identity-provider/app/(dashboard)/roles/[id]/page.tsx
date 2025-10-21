@@ -13,23 +13,21 @@ export default async function EditRolePage({
   const { id } = await params;
   const supabase = getSupabaseClient();
 
-  // Fetch role
+  // Fetch role (no soft delete - roles are hard deleted)
   const { data: role, error } = await supabase
     .from('roles')
     .select('*')
     .eq('id', id)
-    .is('deleted_at', null)
     .single();
 
   if (error || !role) {
     notFound();
   }
 
-  // Fetch all permissions
+  // Fetch all permissions (no soft delete - permissions are hard deleted)
   const { data: allPermissions } = await supabase
     .from('permissions')
     .select('*')
-    .is('deleted_at', null)
     .order('resource');
 
   // Fetch role's current permissions

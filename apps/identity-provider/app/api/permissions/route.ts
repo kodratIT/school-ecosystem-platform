@@ -15,13 +15,12 @@ export async function POST(request: NextRequest) {
 
     const supabase = getSupabaseClient();
 
-    // Check if permission already exists
+    // Check if permission already exists (no soft delete)
     const { data: existing } = await supabase
       .from('permissions')
       .select('id')
       .eq('resource', resource)
       .eq('action', action)
-      .is('deleted_at', null)
       .single();
 
     if (existing) {
