@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Eye, EyeOff, Copy, Check } from 'lucide-react';
 
 interface OAuthClient {
   id: string;
@@ -20,6 +21,10 @@ interface ClientsTableProps {
 export function ClientsTable({ clients }: ClientsTableProps) {
   const router = useRouter();
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [visibleClientIds, setVisibleClientIds] = useState<Set<string>>(
+    new Set()
+  );
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const handleDelete = async (id: string, name: string) => {
     if (
@@ -69,6 +74,28 @@ export function ClientsTable({ clients }: ClientsTableProps) {
     }
   };
 
+  const toggleClientIdVisibility = (id: string) => {
+    setVisibleClientIds((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  const copyToClipboard = async (text: string, id: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch {
+      alert('Failed to copy to clipboard');
+    }
+  };
+
   if (clients.length === 0) {
     return (
       <div className="text-center py-12">
@@ -92,6 +119,9 @@ export function ClientsTable({ clients }: ClientsTableProps) {
               Client ID
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Client Secret
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Type
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -113,10 +143,63 @@ export function ClientsTable({ clients }: ClientsTableProps) {
                   {client.name}
                 </div>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <code className="text-xs bg-gray-100 px-2 py-1 rounded">
-                  {client.client_id}
-                </code>
+              <td className="px-6 py-4">
+                <div className="flex items-center gap-2">
+                  <code className="text-xs bg-gray-100 px-2 py-1 rounded font-mono">
+                    {visibleClientIds.has(client.id)
+                      ? client.client_id
+                      : '••••••••••••••••••••••••••••••••'}
+                  </code>
+                  <button
+                    onClick={() => toggleClientIdVisibility(client.id)}
+                    className="text-gray-400 hover:text-gray-600"
+                    title={
+                      visibleClientIds.has(client.id)
+                        ? 'Hide Client ID'
+                        : 'Show Client ID'
+                    }
+                  >
+                    {visibleClientIds.has(client.id) ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
+                  {visibleClientIds.has(client.id) && (
+                    <button
+                      onClick={() =>
+                        copyToClipboard(client.client_id, `id-${client.id}`)
+                      }
+                      className="text-gray-400 hover:text-gray-600"
+                      title="Copy Client ID"
+                    >
+                      {copiedId === `id-${client.id}` ? (
+                        <Check className="w-4 h-4 text-green-600" />
+                      ) : (
+                        <Copy className="w-4 h-4" />
+                      )}
+                    </button>
+                  )}
+                </div>
+              </td>
+              <td className="px-6 py-4">
+                <div className="flex items-center gap-2">
+                  <code className="text-xs bg-gray-100 px-2 py-1 rounded font-mono text-gray-400">
+                    ••••••••••••••••••••
+                  </code>
+                  <div className="group relative">
+                    <button
+                      className="text-gray-300 cursor-not-allowed"
+                      disabled
+                    >
+                      <EyeOff className="w-4 h-4" />
+                    </button>
+                    <div className="hidden group-hover:block absolute left-0 top-6 z-10 w-64 p-2 bg-gray-900 text-white text-xs rounded shadow-lg">
+                      Secret is hashed and cannot be retrieved. Use "Rotate
+                      Secret" to generate a new one.
+                    </div>
+                  </div>
+                </div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {client.is_confidential ? 'Confidential' : 'Public'}

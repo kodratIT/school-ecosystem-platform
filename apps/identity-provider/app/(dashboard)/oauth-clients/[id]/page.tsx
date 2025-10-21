@@ -3,6 +3,7 @@ import { getOAuthClientById } from '@repo/database-identity';
 import { redirect } from 'next/navigation';
 import { ClientForm } from '@/components/oauth-clients/client-form';
 import { RotateSecretButton } from '@/components/oauth-clients/rotate-secret-button';
+import { ClientCredentials } from '@/components/oauth-clients/client-credentials';
 
 export default async function EditOAuthClientPage({
   params,
@@ -22,13 +23,13 @@ export default async function EditOAuthClientPage({
       <div>
         <h1 className="text-3xl font-bold">Edit OAuth Client</h1>
         <p className="text-gray-600 mt-1">{client.name}</p>
-        <p className="text-sm text-gray-500 mt-1">
-          Client ID:{' '}
-          <code className="bg-gray-100 px-2 py-1 rounded">
-            {client.client_id}
-          </code>
-        </p>
       </div>
+
+      <ClientCredentials
+        clientId={client.client_id}
+        showSecret={false}
+        secretMessage="Client secret is hashed and cannot be retrieved. Use 'Rotate Secret' below to generate a new one."
+      />
 
       <div className="bg-white rounded-lg shadow p-6">
         <ClientForm initialData={client} clientId={client.id} />
