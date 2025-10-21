@@ -132,6 +132,33 @@ export type {
   EmailResendAttempt,
 } from './queries/email-verification';
 
+// Query Builders - Token Audit
+export {
+  logTokenIssued,
+  logTokenRefreshed,
+  logUserInfoAccessed,
+  logTokenValidationFailed,
+  logPKCEVerificationFailed,
+  logTokenExpired,
+  getTokenStats,
+  getTokensByGrantType,
+  getTokensByClient,
+  getFailedTokenAttempts,
+  getTokenActivityTimeline,
+  getMostActiveUsers,
+  detectSuspiciousTokenActivity,
+} from './queries/token-audit';
+export type {
+  TokenAuditLog,
+  TokenStats,
+  TokenByGrantType,
+  TokenByClient,
+  FailedTokenAttempt,
+  TokenActivityTimeline,
+  MostActiveUser,
+  SuspiciousActivity,
+} from './queries/token-audit';
+
 // Utils - Hash
 export {
   hashPassword,
