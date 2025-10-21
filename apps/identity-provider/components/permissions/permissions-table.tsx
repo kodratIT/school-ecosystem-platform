@@ -1,13 +1,7 @@
 'use client';
 
-import { MoreHorizontal, Edit, Trash2, Lock, Plus } from 'lucide-react';
+import { Edit, Trash2, Lock, Plus } from 'lucide-react';
 import Link from 'next/link';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
@@ -60,95 +54,83 @@ export function PermissionsTable({ permissions }: PermissionsTableProps) {
   return (
     <div className="space-y-4">
       {Object.entries(grouped).map(([resource, perms]) => (
-        <div key={resource} className="rounded-lg border bg-white shadow-sm">
+        <div
+          key={resource}
+          className="overflow-hidden rounded-lg border bg-white shadow-sm"
+        >
           {/* Header */}
           <div className="border-b bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="rounded-lg bg-blue-600 p-2">
-                  <Lock className="h-4 w-4 text-white" />
-                </div>
-                <div>
-                  <h3 className="font-semibold capitalize text-gray-900">
-                    {resource}
-                  </h3>
-                  <p className="text-xs text-gray-600">
-                    {perms.length} permission{perms.length !== 1 ? 's' : ''}
-                  </p>
-                </div>
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-blue-600 p-2">
+                <Lock className="h-4 w-4 text-white" />
+              </div>
+              <div>
+                <h3 className="font-semibold capitalize text-gray-900">
+                  {resource}
+                </h3>
+                <p className="text-xs text-gray-600">
+                  {perms.length} permission{perms.length !== 1 ? 's' : ''}
+                </p>
               </div>
             </div>
           </div>
 
-          {/* Table */}
+          {/* Table with proper spacing */}
           <div className="overflow-x-auto">
-            <table className="w-full table-fixed">
-              <colgroup>
-                <col className="w-48" />
-                <col />
-                <col className="w-32" />
-              </colgroup>
-              <thead className="bg-gray-50 text-xs uppercase text-gray-700">
+            <table className="w-full min-w-full">
+              <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left font-medium">Action</th>
-                  <th className="px-6 py-3 text-left font-medium">
-                    Description
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700">
+                    <div style={{ minWidth: '150px' }}>Action</div>
                   </th>
-                  <th className="px-6 py-3 text-center font-medium">Actions</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700">
+                    <div style={{ minWidth: '300px' }}>Description</div>
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-700">
+                    <div style={{ minWidth: '180px' }}>Actions</div>
+                  </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-200 bg-white">
                 {perms.map((permission) => (
                   <tr
                     key={permission.id}
-                    className="transition hover:bg-gray-50"
+                    className="transition-colors hover:bg-gray-50"
                   >
-                    <td className="px-6 py-4">
+                    <td className="whitespace-nowrap px-6 py-4">
                       <Badge
                         variant="secondary"
-                        className="inline-flex bg-blue-100 text-blue-700"
+                        className="bg-blue-100 text-blue-700"
                       >
                         {permission.action}
                       </Badge>
                     </td>
                     <td className="px-6 py-4">
-                      <p className="text-sm text-gray-600 line-clamp-2">
+                      <p className="text-sm text-gray-600">
                         {permission.description || '-'}
                       </p>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex justify-center">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0"
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-40">
-                            <DropdownMenuItem asChild>
-                              <Link
-                                href={`/permissions/${permission.id}`}
-                                className="cursor-pointer"
-                              >
-                                <Edit className="mr-2 h-4 w-4" />
-                                Edit
-                              </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="cursor-pointer text-red-600"
-                              onClick={() =>
-                                handleDeletePermission(permission.id)
-                              }
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                    <td className="whitespace-nowrap px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Link href={`/permissions/${permission.id}`}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 px-3"
+                          >
+                            <Edit className="mr-1.5 h-3.5 w-3.5" />
+                            <span className="text-xs">Edit</span>
+                          </Button>
+                        </Link>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 px-3 text-red-600 hover:bg-red-50 hover:text-red-700"
+                          onClick={() => handleDeletePermission(permission.id)}
+                        >
+                          <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                          <span className="text-xs">Delete</span>
+                        </Button>
                       </div>
                     </td>
                   </tr>
