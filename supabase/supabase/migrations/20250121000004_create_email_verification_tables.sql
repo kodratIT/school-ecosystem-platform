@@ -60,6 +60,8 @@ COMMENT ON COLUMN email_resend_attempts.attempted_at IS 'Timestamp of resend req
 -- 3. AUTO-UPDATE TIMESTAMP TRIGGER
 -- ============================================
 
+DROP TRIGGER IF EXISTS update_email_verifications_updated_at ON email_verifications;
+
 CREATE TRIGGER update_email_verifications_updated_at
   BEFORE UPDATE ON email_verifications
   FOR EACH ROW
@@ -99,6 +101,11 @@ COMMENT ON FUNCTION cleanup_expired_email_verifications() IS
 
 ALTER TABLE email_verifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE email_resend_attempts ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS email_verifications_select_own ON email_verifications;
+DROP POLICY IF EXISTS email_verifications_service_full ON email_verifications;
+DROP POLICY IF EXISTS email_resend_attempts_service_full ON email_resend_attempts;
 
 -- Policy: Users can only view their own verification records
 CREATE POLICY email_verifications_select_own 
