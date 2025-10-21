@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { CredentialsModal } from './credentials-modal';
 
 interface ClientFormData {
   name: string;
@@ -20,6 +21,12 @@ interface ClientFormProps {
   clientId?: string;
 }
 
+interface CreatedClient {
+  client_id: string;
+  client_secret: string;
+  name: string;
+}
+
 export function ClientForm({ initialData, clientId }: ClientFormProps) {
   const router = useRouter();
   const [formData, setFormData] = useState<ClientFormData>({
@@ -35,6 +42,9 @@ export function ClientForm({ initialData, clientId }: ClientFormProps) {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [createdClient, setCreatedClient] = useState<CreatedClient | null>(
+    null
+  );
 
   const addRedirectUri = () => {
     setFormData({
@@ -108,19 +118,18 @@ export function ClientForm({ initialData, clientId }: ClientFormProps) {
         throw new Error(data.error || 'Failed to save client');
       }
 
-      // Show secret for new clients
+      // Show modal for new clients with secret
       if (!clientId && data.client.client_secret) {
-        const secret = data.client.client_secret;
-        alert(
-          `✅ Client Created Successfully!\n\n` +
-            `Client ID: ${data.client.client_id}\n\n` +
-            `Client Secret (SAVE THIS NOW!):\n${secret}\n\n` +
-            `⚠️ You will NOT be able to see this secret again!`
-        );
+        setCreatedClient({
+          client_id: data.client.client_id,
+          client_secret: data.client.client_secret,
+          name: data.client.name,
+        });
+      } else {
+        // For updates, just redirect
+        router.push('/oauth-clients');
+        router.refresh();
       }
-
-      router.push('/oauth-clients');
-      router.refresh();
     } catch (err: unknown) {
       const error = err as Error;
       setError(error.message);
@@ -357,6 +366,16 @@ export function ClientForm({ initialData, clientId }: ClientFormProps) {
           {loading ? 'Saving...' : clientId ? 'Update Client' : 'Create Client'}
         </button>
       </div>
+
+      {/* Credentials Modal */}
+      {createdClient && (
+        <CredentialsModal
+          isOpen={true}
+          clientId={createdClient.client_id}
+          clientSecret={createdClient.client_secret}
+          clientName={createdClient.name}
+        />
+      )}
     </form>
   );
 }
