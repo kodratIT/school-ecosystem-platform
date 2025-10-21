@@ -24,7 +24,6 @@ interface Role {
   description?: string | null;
   is_system: boolean;
   created_at: string;
-  role_permissions?: { count: number }[];
 }
 
 interface RolesTableProps {

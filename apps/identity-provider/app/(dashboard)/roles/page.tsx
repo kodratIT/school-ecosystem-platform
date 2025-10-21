@@ -32,10 +32,10 @@ export default async function RolesPage() {
 
   const supabase = getSupabaseClient();
 
-  // Fetch roles with permission counts
+  // Fetch roles
   const { data: roles, error } = await supabase
     .from('roles')
-    .select('*, role_permissions(count)')
+    .select('*')
     .is('deleted_at', null)
     .order('created_at', { ascending: false });
 
