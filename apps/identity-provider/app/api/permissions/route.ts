@@ -32,9 +32,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Create permission
+    // Generate slug from resource and action
+    const slug = `${resource}:${action}`;
+    const name = `${resource.charAt(0).toUpperCase() + resource.slice(1)} ${action.charAt(0).toUpperCase() + action.slice(1)}`;
+
     const { data, error } = await supabase
       .from('permissions')
       .insert({
+        name,
+        slug,
         resource,
         action,
         description,
