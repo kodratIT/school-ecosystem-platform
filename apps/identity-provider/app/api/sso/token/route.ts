@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
+// @ts-ignore
 import { TokenManager } from '@repo/jwt';
 import { getSupabaseClient } from '@/lib/db';
 import {
   verifyClientCredentials,
   updateClientLastUsed,
   supportsGrantType,
+  validateAndConsumeAuthorizationCode,
 } from '@repo/database-identity';
+import { validatePKCETokenParams } from '@/lib/pkce';
 import { z } from 'zod';
-import { cookies } from 'next/headers';
 
 const tokenSchema = z.object({
   grant_type: z.literal('authorization_code'),
@@ -15,6 +17,7 @@ const tokenSchema = z.object({
   client_id: z.string(),
   client_secret: z.string(),
   redirect_uri: z.string().url(),
+  code_verifier: z.string().optional(),
 });
 
 const tokenManager = new TokenManager(process.env.JWT_SECRET!);
@@ -60,53 +63,41 @@ export async function POST(request: NextRequest) {
     // Update last used timestamp
     await updateClientLastUsed(client.client_id);
 
-    // Retrieve code data from cookie
-    const cookieStore = await cookies();
-    const codeDataCookie = cookieStore.get('sso_code_' + params.code);
-
-    if (!codeDataCookie) {
+    // Validate and consume authorization code from database
+    let authCode;
+    try {
+      authCode = await validateAndConsumeAuthorizationCode(
+        params.code,
+        params.client_id,
+        params.redirect_uri
+      );
+    } catch (error) {
       return NextResponse.json(
         {
           error: 'invalid_grant',
-          error_description: 'Invalid or expired code',
+          error_description:
+            error instanceof Error
+              ? error.message
+              : 'Invalid authorization code',
         },
         { status: 400 }
       );
     }
 
-    const codeData = JSON.parse(codeDataCookie.value);
+    // Validate PKCE if code_challenge was used
+    const pkceValidation = validatePKCETokenParams(
+      params.code_verifier,
+      authCode.code_challenge,
+      authCode.code_challenge_method
+    );
 
-    // Verify code
-    if (codeData.code !== params.code) {
-      return NextResponse.json(
-        { error: 'invalid_grant', error_description: 'Code mismatch' },
-        { status: 400 }
-      );
-    }
-
-    // Check expiration
-    if (Date.now() > codeData.expiresAt) {
-      return NextResponse.json(
-        { error: 'invalid_grant', error_description: 'Code expired' },
-        { status: 400 }
-      );
-    }
-
-    // Verify redirect URI matches
-    if (codeData.redirectUri !== params.redirect_uri) {
+    if (!pkceValidation.valid) {
       return NextResponse.json(
         {
-          error: 'invalid_grant',
-          error_description: 'Redirect URI mismatch',
+          error: pkceValidation.error || 'invalid_grant',
+          error_description:
+            pkceValidation.errorDescription || 'PKCE verification failed',
         },
-        { status: 400 }
-      );
-    }
-
-    // Verify client_id matches
-    if (codeData.clientId !== params.client_id) {
-      return NextResponse.json(
-        { error: 'invalid_grant', error_description: 'Client ID mismatch' },
         { status: 400 }
       );
     }
@@ -116,7 +107,7 @@ export async function POST(request: NextRequest) {
     const { data: user, error: userError } = await supabase
       .from('users')
       .select('id, email, name, is_active')
-      .eq('id', codeData.userId)
+      .eq('id', authCode.user_id)
       .single();
 
     if (userError || !user) {
@@ -152,17 +143,13 @@ export async function POST(request: NextRequest) {
       params.redirect_uri // Use redirect_uri as audience
     );
 
-    // Delete the code cookie (one-time use)
-    const response = NextResponse.json({
+    // Return tokens (authorization code already marked as used in database)
+    return NextResponse.json({
       access_token: tokens.accessToken,
       refresh_token: tokens.refreshToken,
       token_type: tokens.tokenType,
       expires_in: tokens.expiresIn,
     });
-
-    response.cookies.delete('sso_code_' + params.code);
-
-    return response;
   } catch (error) {
     console.error('SSO token error:', error);
 
