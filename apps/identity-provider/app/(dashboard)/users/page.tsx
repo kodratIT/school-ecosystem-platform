@@ -2,16 +2,19 @@ import { Suspense } from 'react';
 import { getCurrentUser } from '@/lib/auth-utils';
 import { UsersTable } from '@/components/users/users-table';
 import { UsersFilters } from '@/components/users/users-filters';
+import { ExportButton } from '@/components/users/export-button';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
 import { getSupabaseClient } from '@/lib/db';
+import { Pagination } from '@/components/common/pagination';
 
 export default async function UsersPage({
   searchParams,
 }: {
-  searchParams: { search?: string; role?: string; page?: string };
+  searchParams: Promise<{ search?: string; role?: string; page?: string }>;
 }) {
+  const params = await searchParams;
   const currentUser = await getCurrentUser();
 
   if (!currentUser) {
@@ -19,7 +22,7 @@ export default async function UsersPage({
   }
 
   // Pagination
-  const page = parseInt(searchParams.page || '1');
+  const page = parseInt(params.page || '1');
   const itemsPerPage = 20;
 
   // Fetch users from database
@@ -32,8 +35,8 @@ export default async function UsersPage({
     .is('deleted_at', null);
 
   // Filter count by role
-  if (searchParams.role) {
-    countQuery = countQuery.eq('role', searchParams.role);
+  if (params.role) {
+    countQuery = countQuery.eq('role', params.role);
   }
 
   const { count } = await countQuery;
@@ -54,8 +57,8 @@ export default async function UsersPage({
   // This will be fixed in future when session includes school data
 
   // Filter by role
-  if (searchParams.role) {
-    query = query.eq('role', searchParams.role);
+  if (params.role) {
+    query = query.eq('role', params.role);
   }
 
   const { data: users, error } = await query;
@@ -66,11 +69,11 @@ export default async function UsersPage({
   }
 
   // Filter by search
-  const filteredUsers = searchParams.search
+  const filteredUsers = params.search
     ? (users || []).filter(
         (u) =>
-          u.name.toLowerCase().includes(searchParams.search!.toLowerCase()) ||
-          u.email.toLowerCase().includes(searchParams.search!.toLowerCase())
+          u.name.toLowerCase().includes(params.search!.toLowerCase()) ||
+          u.email.toLowerCase().includes(params.search!.toLowerCase())
       )
     : users || [];
 
