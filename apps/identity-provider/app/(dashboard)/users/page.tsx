@@ -9,6 +9,15 @@ import Link from 'next/link';
 import { getSupabaseClient } from '@/lib/db';
 import { Pagination } from '@/components/common/pagination';
 
+type UserRole =
+  | 'super_admin'
+  | 'school_admin'
+  | 'teacher'
+  | 'student'
+  | 'parent'
+  | 'finance_staff'
+  | 'staff';
+
 export default async function UsersPage({
   searchParams,
 }: {
@@ -36,7 +45,7 @@ export default async function UsersPage({
 
   // Filter count by role
   if (params.role) {
-    countQuery = countQuery.eq('role', params.role);
+    countQuery = countQuery.eq('role', params.role as UserRole);
   }
 
   const { count } = await countQuery;
@@ -52,13 +61,9 @@ export default async function UsersPage({
     .order('created_at', { ascending: false })
     .range(from, to);
 
-  // Filter by school if not super_admin
-  // Note: currentUser from auth doesn't have school_id yet
-  // This will be fixed in future when session includes school data
-
   // Filter by role
   if (params.role) {
-    query = query.eq('role', params.role);
+    query = query.eq('role', params.role as UserRole);
   }
 
   const { data: users, error } = await query;
@@ -68,12 +73,12 @@ export default async function UsersPage({
     throw new Error('Failed to fetch users');
   }
 
-  // Filter by search
+  // Filter by search (client-side for now)
   const filteredUsers = params.search
     ? (users || []).filter(
         (u) =>
-          u.name.toLowerCase().includes(params.search!.toLowerCase()) ||
-          u.email.toLowerCase().includes(params.search!.toLowerCase())
+          u.name?.toLowerCase().includes(params.search!.toLowerCase()) ||
+          u.email?.toLowerCase().includes(params.search!.toLowerCase())
       )
     : users || [];
 
