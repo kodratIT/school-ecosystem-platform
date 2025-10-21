@@ -2,7 +2,7 @@
 
 **Last Updated**: 2025-01-21  
 **Current Phase**: Phase 1 - Identity Provider (Enhanced Features) 🏗️  
-**Overall Progress**: Phase 0 Complete + Phase 1 Enhanced (11/13 base + STORY-026 + STORY-027 complete)
+**Overall Progress**: Phase 0 Complete + Phase 1 Enhanced (11/13 base + STORY-026 + STORY-027 + STORY-028 complete)
 
 ---
 
@@ -14,7 +14,7 @@ Implementation: ██████████████░  77% Phase 1 - 10 
 Overall: ████████████████░  88%
 ```
 
-**Current Task**: Phase 1 - STORY-027 COMPLETE ✅ (PKCE Support)  
+**Current Task**: Phase 1 - STORY-028 COMPLETE ✅ (Email Verification Resend)  
 **Next Milestone**: Complete remaining Phase 1 stories (SSO & OIDC endpoints)
 
 ---
@@ -66,8 +66,8 @@ Overall: ████████████████░  88%
 ✅ Phase 0: COMPLETE!
 ✅ Phase 1: 11/13 base stories + STORY-026 done (85%)
 
-🎉 STORY-012 to 020 + STORY-026 + STORY-027: ALL COMPLETE!
-✅ Database + Auth + JWT + Dashboard + Password Reset + PKCE
+🎉 STORY-012 to 020 + STORY-026 + STORY-027 + STORY-028: ALL COMPLETE!
+✅ Database + Auth + JWT + Dashboard + Password Reset + PKCE + Email Resend
 
 ⏳ NEXT: STORY-021 (SSO Implementation)
 🔐 Implement Single Sign-On with OIDC
@@ -99,15 +99,16 @@ Overall: ████████████████░  88%
 | 020 | Dashboard Features | ✅ DONE | 2024-12-21 | 2024-12-21 | User & School management CRUD |
 | 026 | Password Reset Flow | ✅ DONE | 2025-01-21 | 2025-01-21 | Complete password reset with email, rate limiting |
 | 027 | PKCE Support | ✅ DONE | 2025-01-21 | 2025-01-21 | OAuth PKCE for secure public clients |
+| 028 | Email Verification Resend | ✅ DONE | 2025-01-21 | 2025-01-21 | Resend verification with rate limiting |
 | 021 | SSO Implementation | ⏳ TODO | - | - | After 020 |
 | 022 | OIDC Discovery Endpoint | ⏳ TODO | - | - | After 019 |
 | 023 | OIDC UserInfo Endpoint | ⏳ TODO | - | - | After 019 |
 | 024 | OIDC Client SDK | ⏳ TODO | - | - | After 021 |
 
-**Progress**: 11/13 base + 2 enhancements (90%) 🏗️
+**Progress**: 11/13 base + 3 enhancements (93%) 🏗️
 
-**Completed**: STORY-012 to 020 + STORY-026 + STORY-027 ✅  
-**Current**: STORY-027 PKCE Support Complete!  
+**Completed**: STORY-012 to 020 + STORY-026 + STORY-027 + STORY-028 ✅  
+**Current**: STORY-028 Email Verification Resend Complete!  
 **Next**: STORY-021 (SSO Implementation)
 
 ---
@@ -172,6 +173,7 @@ Total: ████████████████░░░░  88% (21/24 
 - [x] STORY-020: Dashboard Features (User & School CRUD) ✅
 - [x] STORY-026: Password Reset Flow ✅
 - [x] STORY-027: PKCE Support ✅
+- [x] STORY-028: Email Verification Resend ✅
 
 **Next Up:**
 - [ ] STORY-021: SSO Implementation 🎯
@@ -246,6 +248,39 @@ Total: ████████████████░░░░  88% (21/24 
 ---
 
 ## 📝 Change Log
+
+### 2025-01-21 - 📧 STORY-028 COMPLETE: Email Verification Resend
+- ✅ **Task 1**: Database migrations
+  - email_verifications table for tokens (UUID, 48h expiry, single-use)
+  - email_resend_attempts table for rate limiting
+  - Cleanup functions for expired data
+  - RLS policies for security
+  - Helper function: get_active_verification_token()
+- ✅ **Task 2**: Database query functions
+  - createEmailVerification(): Create new verification token
+  - getEmailVerificationByToken(): Retrieve by token
+  - markEmailVerificationVerified(): Mark as verified
+  - invalidateUserEmailVerifications(): Expire all user tokens
+  - recordEmailResendAttempt(): Track resend attempts
+  - countRecentResendAttemptsByEmail/IP(): Rate limiting helpers
+  - cleanupExpiredEmailVerifications(): Maintenance
+- ✅ **Task 3**: API endpoint with rate limiting
+  - POST /api/auth/resend-verification
+  - Dual rate limiting (1/5min email, 3/hr IP)
+  - Generic responses (prevent enumeration)
+  - Email template with HTML + plain text
+  - Audit logging
+  - Security: Always record attempts
+- ✅ **Task 4**: UI component update
+  - Remove TODO comment
+  - Real-time countdown timer (MM:SS format)
+  - Success/error alerts with icons
+  - Button states (loading, disabled, countdown)
+  - Auto-dismiss notifications
+  - Full error handling
+- 🎯 **Achievement**: Complete email verification resend with security
+- 🔒 **Security**: Rate limiting, generic responses, audit logging
+- 📦 **Files Changed**: 4 commits (migration, functions, API, UI)
 
 ### 2025-01-21 - 🔐 STORY-027 COMPLETE: PKCE Support
 - ✅ **Task 1**: Database migration for authorization_codes table
@@ -427,4 +462,4 @@ Total: ████████████████░░░░  88% (21/24 
 
 **Last Updated**: 2025-01-21  
 **Next Update**: After completing STORY-021  
-**Status**: Phase 1 Enhanced - 90% Complete (11/13 base + STORY-026 + STORY-027) 🚀
+**Status**: Phase 1 Enhanced - 93% Complete (11/13 base + STORY-026 + STORY-027 + STORY-028) 🚀
