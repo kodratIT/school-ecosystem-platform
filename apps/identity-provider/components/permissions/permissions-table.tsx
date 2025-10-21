@@ -1,9 +1,15 @@
 'use client';
 
-import { Edit, Trash2, Lock, Plus } from 'lucide-react';
+import { MoreHorizontal, Edit, Trash2, Lock, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface Permission {
   id: string;
@@ -86,8 +92,8 @@ export function PermissionsTable({ permissions }: PermissionsTableProps) {
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700">
                     <div style={{ minWidth: '300px' }}>Description</div>
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-700">
-                    <div style={{ minWidth: '180px' }}>Actions</div>
+                  <th className="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-700">
+                    <div style={{ minWidth: '80px' }}>Actions</div>
                   </th>
                 </tr>
               </thead>
@@ -110,28 +116,31 @@ export function PermissionsTable({ permissions }: PermissionsTableProps) {
                         {permission.description || '-'}
                       </p>
                     </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Link href={`/permissions/${permission.id}`}>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 px-3"
-                          >
-                            <Edit className="mr-1.5 h-3.5 w-3.5" />
-                            <span className="text-xs">Edit</span>
+                    <td className="whitespace-nowrap px-6 py-4 text-center">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreHorizontal className="h-4 w-4" />
                           </Button>
-                        </Link>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 px-3 text-red-600 hover:bg-red-50 hover:text-red-700"
-                          onClick={() => handleDeletePermission(permission.id)}
-                        >
-                          <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-                          <span className="text-xs">Delete</span>
-                        </Button>
-                      </div>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem asChild>
+                            <Link href={`/permissions/${permission.id}`}>
+                              <Edit className="mr-2 h-4 w-4" />
+                              Edit
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-red-600"
+                            onClick={() =>
+                              handleDeletePermission(permission.id)
+                            }
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </td>
                   </tr>
                 ))}
