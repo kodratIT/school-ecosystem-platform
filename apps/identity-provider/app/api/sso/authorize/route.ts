@@ -8,6 +8,7 @@ import {
   createAuthorizationCode,
 } from '@repo/database-identity';
 import { validatePKCEAuthParams } from '@/lib/pkce';
+import { getSupabaseClient } from '@/lib/db';
 import { z } from 'zod';
 
 const authorizeSchema = z.object({
@@ -127,7 +128,86 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(errorUrl);
     }
 
-    // Generate authorization code
+    // Check if consent is needed
+    const supabase = getSupabaseClient();
+    const scopesArray = scope.split(' ');
+
+    const { data: needsConsentData, error: consentError } = await supabase.rpc(
+      'needs_consent',
+      {
+        p_user_id: session.user.id,
+        p_client_id: params.client_id,
+        p_requested_scopes: scopesArray,
+      }
+    );
+
+    if (consentError) {
+      console.error('Failed to check consent:', consentError);
+      const errorUrl = new URL(params.redirect_uri);
+      errorUrl.searchParams.set('error', 'server_error');
+      errorUrl.searchParams.set(
+        'error_description',
+        'Failed to process authorization'
+      );
+      if (params.state) errorUrl.searchParams.set('state', params.state);
+      return NextResponse.redirect(errorUrl);
+    }
+
+    // If consent is needed, redirect to consent screen
+    if (needsConsentData === true) {
+      // Generate authorization code for later use
+      const code = crypto.randomUUID();
+
+      // Store authorization code
+      await createAuthorizationCode({
+        code,
+        clientId: params.client_id,
+        userId: session.user.id,
+        redirectUri: params.redirect_uri,
+        scope: scopesArray,
+        codeChallenge: params.code_challenge,
+        codeChallengeMethod: params.code_challenge_method as
+          | 'S256'
+          | 'plain'
+          | undefined,
+        expiresInSeconds: 300, // 5 minutes for consent flow
+      });
+
+      // Build redirect URL with code
+      const redirectUrl = new URL(params.redirect_uri);
+      redirectUrl.searchParams.set('code', code);
+      if (params.state) {
+        redirectUrl.searchParams.set('state', params.state);
+      }
+
+      // Store consent request in session/cookie
+      const consentRequest = {
+        client_id: params.client_id,
+        client: {
+          client_id: client.client_id,
+          name: client.name,
+          description: client.description,
+          logo_url: client.logo_url,
+        },
+        scopes: scopesArray,
+        authorization_url: redirectUrl.toString(),
+        state: params.state,
+      };
+
+      const consentUrl = new URL('/consent', request.url);
+      const response = NextResponse.redirect(consentUrl);
+      response.cookies.set('consent_request', JSON.stringify(consentRequest), {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 300, // 5 minutes
+        path: '/',
+      });
+
+      return response;
+    }
+
+    // No consent needed, generate authorization code
     const code = crypto.randomUUID();
 
     // Store authorization code in database with PKCE support
