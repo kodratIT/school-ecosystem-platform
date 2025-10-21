@@ -2,7 +2,7 @@
 
 **Last Updated**: 2025-01-21  
 **Current Phase**: Phase 1 - Identity Provider (Enhanced Features) 🏗️  
-**Overall Progress**: Phase 0 Complete + Phase 1 COMPLETE (13/13 base + 3 enhancements = 100%!)
+**Overall Progress**: Phase 0 Complete + Phase 1 COMPLETE (13/13 base + 4 enhancements = 100%!)
 
 ---
 
@@ -14,7 +14,7 @@ Implementation: ████████████████████ 100
 Overall: ████████████████████ 100% Phase 0 & Phase 1!
 ```
 
-**Current Task**: Phase 1 - COMPLETE! ✅ (All 13 base stories + 3 enhancements)  
+**Current Task**: Phase 1 - COMPLETE! ✅ (All 13 base stories + 4 enhancements)  
 **Next Milestone**: Phase 2 - Service Provider Documentation & Implementation
 
 ---
@@ -24,7 +24,7 @@ Overall: ████████████████████ 100% Phase
 | Phase | Name | Stories | Doc Status | Impl Status | Progress |
 |-------|------|---------|------------|-------------|----------|
 | 0 | Foundation | 11 | ✅ Complete | ✅ Complete | 100% |
-| 1 | Identity Provider | 13+3 | ✅ Complete | ✅ Complete | 100% (16/16) |
+| 1 | Identity Provider | 13+4 | ✅ Complete | ✅ Complete | 100% (17/17) |
 | 2 | Service Provider | TBD | ⏳ Pending | ⏳ Not Started | 0% |
 | 3 | PPDB | TBD | ⏳ Pending | ⏳ Not Started | 0% |
 | 4 | SIS | TBD | ⏳ Pending | ⏳ Not Started | 0% |
@@ -67,8 +67,8 @@ Overall: ████████████████████ 100% Phase
 ✅ Phase 1: COMPLETE! 🎉
 
 🎊 ALL PHASE 1 STORIES COMPLETE! 🎊
-✅ STORY-012 to 028 (13 base + 3 enhancements = 16 stories)
-✅ Database + Auth + JWT + Dashboard + SSO + OIDC + OAuth + Password Reset + PKCE + Email Resend
+✅ STORY-012 to 029 (13 base + 4 enhancements = 17 stories)
+✅ Database + Auth + JWT + Dashboard + SSO + OIDC + OAuth + Password Reset + PKCE + Email Resend + Token Analytics
 
 🚀 NEXT: PHASE 2 - Service Provider
 🔐 Implement Single Sign-On with OIDC
@@ -81,7 +81,7 @@ Overall: ████████████████████ 100% Phase
 ## 🔐 Phase 1: Identity Provider
 
 **Status**: ✅ COMPLETE!  
-**Progress**: 13/13 base + 3 enhancements (100%)  
+**Progress**: 13/13 base + 4 enhancements (100%)  
 **Duration**: 3 weeks  
 **Documentation**: [Phase 1 Guide](../phases/phase-01-identity-provider/README.md)
 
@@ -106,10 +106,11 @@ Overall: ████████████████████ 100% Phase
 | 026 | Password Reset Flow | ✅ DONE | 2025-01-21 | 2025-01-21 | Complete password reset with email, rate limiting |
 | 027 | PKCE Support | ✅ DONE | 2025-01-21 | 2025-01-21 | OAuth PKCE for secure public clients |
 | 028 | Email Verification Resend | ✅ DONE | 2025-01-21 | 2025-01-21 | Resend verification with rate limiting |
+| 029 | Token Audit Logging & Analytics | ✅ DONE | 2025-01-21 | 2025-01-21 | Comprehensive token monitoring & security |
 
-**Progress**: 13/13 base + 3 enhancements (100%) ✅🎉
+**Progress**: 13/13 base + 4 enhancements (100%) ✅🎉
 
-**Completed**: STORY-012 to 028 (ALL STORIES COMPLETE!) ✅  
+**Completed**: STORY-012 to 029 (ALL STORIES COMPLETE!) ✅  
 **Current**: Phase 1 Identity Provider - COMPLETE!  
 **Next**: Phase 2 - Service Provider
 
@@ -181,6 +182,7 @@ Total: ████████████████░░░░  88% (21/24 
 - [x] STORY-026: Password Reset Flow ✅
 - [x] STORY-027: PKCE Support ✅
 - [x] STORY-028: Email Verification Resend ✅
+- [x] STORY-029: Token Audit Logging & Analytics ✅
 
 🎉 **PHASE 1 COMPLETE!** 🎉
 
@@ -257,6 +259,52 @@ Total: ████████████████░░░░  88% (21/24 
 ---
 
 ## 📝 Change Log
+
+### 2025-01-21 - 📊 STORY-029 COMPLETE: Token Audit Logging & Analytics
+- ✅ **Task 1**: Database migration for token analytics
+  - token_analytics view (daily aggregations)
+  - get_token_stats(): Aggregated statistics function
+  - get_tokens_by_grant_type(): Group by grant type
+  - get_tokens_by_client(): Top N clients with stats
+  - get_failed_token_attempts(): Security monitoring
+  - get_token_activity_timeline(): Time-series data
+  - get_most_active_users(): User activity ranking
+  - detect_suspicious_token_activity(): Attack pattern detection
+  - Performance indexes on audit_logs
+- ✅ **Task 2**: Token audit logging functions
+  - logTokenIssued(): Log token issuance
+  - logTokenRefreshed(): Log refresh operations
+  - logUserInfoAccessed(): Log UserInfo access
+  - logTokenValidationFailed(): Log failures
+  - logPKCEVerificationFailed(): Log PKCE errors
+  - logTokenExpired(): Log expired attempts
+  - Analytics wrapper functions (7 functions)
+  - TypeScript interfaces (9 types)
+- ✅ **Task 3**: Integrate logging to SSO endpoints
+  - /api/sso/token: Log all operations (success + failures)
+  - /api/oidc/userinfo: Log all accesses
+  - Capture IP address and user agent
+  - Non-blocking async logging
+  - Full error context
+- ✅ **Task 4**: Analytics API endpoints
+  - GET /api/analytics/tokens: Comprehensive dashboard data
+  - GET /api/analytics/tokens/stats: Summary statistics
+  - GET /api/analytics/tokens/suspicious: Security monitoring
+  - Authentication required (super_admin/school_admin)
+  - Zod validation for query params
+  - Parallel data fetching with Promise.all
+- ✅ **Task 5**: Token analytics dashboard UI
+  - Page: /analytics/tokens
+  - 4 stat cards (issued, refreshed, failed, users)
+  - Grant type breakdown with progress bars
+  - Top clients table
+  - Recent failures list (scrollable)
+  - Suspicious activity alert + table
+  - Loading and error states
+  - Responsive design
+- 🎯 **Achievement**: Complete token monitoring & security analytics system
+- 🔒 **Security**: Real-time attack detection, audit trail, compliance ready
+- 📦 **Files Changed**: 6 commits (migration, functions, integration, APIs, UI, meta)
 
 ### 2025-01-21 - 📧 STORY-028 COMPLETE: Email Verification Resend
 - ✅ **Task 1**: Database migrations
@@ -471,4 +519,4 @@ Total: ████████████████░░░░  88% (21/24 
 
 **Last Updated**: 2025-01-21  
 **Next Update**: Phase 2 Documentation & Planning  
-**Status**: Phase 1 - 100% COMPLETE! 🎉 (13 base + 3 enhancements = 16 stories) 🚀
+**Status**: Phase 1 - 100% COMPLETE! 🎉 (13 base + 4 enhancements = 17 stories) 🚀
