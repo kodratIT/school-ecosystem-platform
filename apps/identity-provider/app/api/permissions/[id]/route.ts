@@ -15,10 +15,10 @@ export async function DELETE(
       .delete()
       .eq('permission_id', params.id);
 
-    // Soft delete permission
+    // Delete permission (hard delete, permissions table doesn't have deleted_at)
     const { error } = await supabase
       .from('permissions')
-      .update({ deleted_at: new Date().toISOString() })
+      .delete()
       .eq('id', params.id);
 
     if (error) {
