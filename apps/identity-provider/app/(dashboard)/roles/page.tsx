@@ -32,11 +32,10 @@ export default async function RolesPage() {
 
   const supabase = getSupabaseClient();
 
-  // Fetch roles
+  // Fetch roles (no soft delete - roles are hard deleted)
   const { data: roles, error } = await supabase
     .from('roles')
     .select('*')
-    .is('deleted_at', null)
     .order('created_at', { ascending: false });
 
   if (error) {
