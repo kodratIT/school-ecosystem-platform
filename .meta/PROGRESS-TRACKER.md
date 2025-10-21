@@ -2,7 +2,7 @@
 
 **Last Updated**: 2025-01-21  
 **Current Phase**: Phase 1 - Identity Provider (Enhanced Features) 🏗️  
-**Overall Progress**: Phase 0 Complete + Phase 1 COMPLETE (13/13 base + 4 enhancements = 100%!)
+**Overall Progress**: Phase 0 Complete + Phase 1 COMPLETE (13/13 base + 5 enhancements = 100%!)
 
 ---
 
@@ -14,7 +14,7 @@ Implementation: ████████████████████ 100
 Overall: ████████████████████ 100% Phase 0 & Phase 1!
 ```
 
-**Current Task**: Phase 1 - COMPLETE! ✅ (All 13 base stories + 4 enhancements)  
+**Current Task**: Phase 1 - COMPLETE! ✅ (All 13 base stories + 5 enhancements)  
 **Next Milestone**: Phase 2 - Service Provider Documentation & Implementation
 
 ---
@@ -24,7 +24,7 @@ Overall: ████████████████████ 100% Phase
 | Phase | Name | Stories | Doc Status | Impl Status | Progress |
 |-------|------|---------|------------|-------------|----------|
 | 0 | Foundation | 11 | ✅ Complete | ✅ Complete | 100% |
-| 1 | Identity Provider | 13+4 | ✅ Complete | ✅ Complete | 100% (17/17) |
+| 1 | Identity Provider | 13+5 | ✅ Complete | ✅ Complete | 100% (18/18) |
 | 2 | Service Provider | TBD | ⏳ Pending | ⏳ Not Started | 0% |
 | 3 | PPDB | TBD | ⏳ Pending | ⏳ Not Started | 0% |
 | 4 | SIS | TBD | ⏳ Pending | ⏳ Not Started | 0% |
@@ -67,8 +67,8 @@ Overall: ████████████████████ 100% Phase
 ✅ Phase 1: COMPLETE! 🎉
 
 🎊 ALL PHASE 1 STORIES COMPLETE! 🎊
-✅ STORY-012 to 029 (13 base + 4 enhancements = 17 stories)
-✅ Database + Auth + JWT + Dashboard + SSO + OIDC + OAuth + Password Reset + PKCE + Email Resend + Token Analytics
+✅ STORY-012 to 030 (13 base + 5 enhancements = 18 stories)
+✅ Database + Auth + JWT + Dashboard + SSO + OIDC + OAuth + Password Reset + PKCE + Email Resend + Token Analytics + Consent Screen
 
 🚀 NEXT: PHASE 2 - Service Provider
 🔐 Implement Single Sign-On with OIDC
@@ -81,7 +81,7 @@ Overall: ████████████████████ 100% Phase
 ## 🔐 Phase 1: Identity Provider
 
 **Status**: ✅ COMPLETE!  
-**Progress**: 13/13 base + 4 enhancements (100%)  
+**Progress**: 13/13 base + 5 enhancements (100%)  
 **Duration**: 3 weeks  
 **Documentation**: [Phase 1 Guide](../phases/phase-01-identity-provider/README.md)
 
@@ -107,10 +107,11 @@ Overall: ████████████████████ 100% Phase
 | 027 | PKCE Support | ✅ DONE | 2025-01-21 | 2025-01-21 | OAuth PKCE for secure public clients |
 | 028 | Email Verification Resend | ✅ DONE | 2025-01-21 | 2025-01-21 | Resend verification with rate limiting |
 | 029 | Token Audit Logging & Analytics | ✅ DONE | 2025-01-21 | 2025-01-21 | Comprehensive token monitoring & security |
+| 030 | OAuth Consent Screen | ✅ DONE | 2025-01-21 | 2025-01-21 | User consent for third-party apps |
 
-**Progress**: 13/13 base + 4 enhancements (100%) ✅🎉
+**Progress**: 13/13 base + 5 enhancements (100%) ✅🎉
 
-**Completed**: STORY-012 to 029 (ALL STORIES COMPLETE!) ✅  
+**Completed**: STORY-012 to 030 (ALL STORIES COMPLETE!) ✅  
 **Current**: Phase 1 Identity Provider - COMPLETE!  
 **Next**: Phase 2 - Service Provider
 
@@ -183,6 +184,7 @@ Total: ████████████████░░░░  88% (21/24 
 - [x] STORY-027: PKCE Support ✅
 - [x] STORY-028: Email Verification Resend ✅
 - [x] STORY-029: Token Audit Logging & Analytics ✅
+- [x] STORY-030: OAuth Consent Screen ✅
 
 🎉 **PHASE 1 COMPLETE!** 🎉
 
@@ -259,6 +261,60 @@ Total: ████████████████░░░░  88% (21/24 
 ---
 
 ## 📝 Change Log
+
+### 2025-01-21 - 🛡️ STORY-030 COMPLETE: OAuth Consent Screen
+- ✅ **Task 1**: Database migration for user consents
+  - user_consents table (id, user_id, client_id, scopes, timestamps, metadata)
+  - Unique constraint on (user_id, client_id)
+  - 4 performance indexes (user, client, granted, revoked)
+  - 5 RLS policies (select own, insert, update, delete, admin select)
+  - needs_consent(): Check if consent needed
+    * Check client.require_consent flag
+    * Check existing consent and scopes
+    * Return boolean
+  - grant_user_consent(): Grant/update consent with UPSERT
+  - update_consent_last_used(): Update timestamp
+  - revoke_user_consent(): Revoke (don't delete)
+  - get_user_consents(): List with client details
+  - get_consent_by_id(): Get single consent
+  - Trigger: Auto-update last_used_at on auth code creation
+- ✅ **Task 2**: Consent flow integration
+  - Consent screen page (/consent)
+    * Beautiful, professional UI
+    * App logo, name, description
+    * Scope list with explanations
+    * Allow/Deny buttons
+    * Security warning
+    * Loading and error states
+  - GET /api/consent/request: Get pending consent from cookie
+  - POST /api/consent/grant: Grant or deny consent
+    * Call grant_user_consent() if approved
+    * Capture IP and user agent
+    * Return redirect URL with code or error
+    * Clear consent cookie
+  - Updated /api/sso/authorize:
+    * Check consent with needs_consent()
+    * Redirect to /consent if needed
+    * Store consent request in cookie (5min)
+    * Continue normal flow if no consent needed
+  - Consent request cookie (HttpOnly, secure, 5min expiry)
+- ✅ **Task 3**: Consent management page
+  - /settings/consents page
+    * List all active app permissions
+    * Show client info and scopes
+    * Display granted and last used dates
+    * Revoke button with confirmation
+    * Empty state, loading, error handling
+    * Security tip banner
+  - GET /api/user/consents: Get user's consents
+  - DELETE /api/user/consents/[id]: Revoke consent
+    * Verify ownership
+    * Call revoke_user_consent()
+    * Return success response
+- 🎯 **Achievement**: Complete OAuth consent flow for third-party apps
+- 🔒 **Security**: User control over data access, audit trail, IP tracking
+- 🎨 **UI/UX**: Professional design, clear explanations, security warnings
+- 📦 **Files Changed**: 3 commits (migration, flow, management)
 
 ### 2025-01-21 - 📊 STORY-029 COMPLETE: Token Audit Logging & Analytics
 - ✅ **Task 1**: Database migration for token analytics
@@ -519,4 +575,4 @@ Total: ████████████████░░░░  88% (21/24 
 
 **Last Updated**: 2025-01-21  
 **Next Update**: Phase 2 Documentation & Planning  
-**Status**: Phase 1 - 100% COMPLETE! 🎉 (13 base + 4 enhancements = 17 stories) 🚀
+**Status**: Phase 1 - 100% COMPLETE! 🎉 (13 base + 5 enhancements = 18 stories) 🚀
