@@ -79,6 +79,24 @@ export {
   searchOAuthClients,
 } from './queries/oauth-clients';
 
+// Query Builders - Password Reset
+export {
+  createResetToken,
+  validateToken,
+  markTokenUsed,
+  getTokenWithUser,
+  cleanupExpiredTokens,
+  getActiveTokensForUser,
+  countRecentResetRequests,
+  countRecentResetRequestsByIP,
+  deleteUserResetTokens,
+} from './queries/password-reset';
+export type {
+  CreateResetTokenInput,
+  ValidateTokenResult,
+  TokenWithUser,
+} from './queries/password-reset';
+
 // Utils - Hash
 export {
   hashPassword,
