@@ -7,7 +7,11 @@ export async function POST(request: NextRequest) {
     const {
       name,
       npsn,
+      education_level,
       address,
+      village,
+      district,
+      sub_district,
       city,
       province,
       postal_code,
@@ -23,19 +27,27 @@ export async function POST(request: NextRequest) {
 
     const supabase = getSupabaseClient();
 
+    // Generate slug from name
+    const slug = name.toLowerCase().replace(/\s+/g, '-');
+
     // Create school
     const { data, error } = await supabase
       .from('schools')
       .insert({
         name,
+        slug,
         npsn,
+        education_level: education_level || 'sd',
         address,
+        village: village || null,
+        district: district || null,
+        sub_district: sub_district || null,
         city,
         province,
         postal_code,
         phone,
         email,
-        website,
+        website: website || null,
         is_active: is_active ?? true,
       })
       .select()
