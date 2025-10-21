@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { deleteSession, verifySession } from '@/lib/auth';
+import { deleteSession, getSession } from '@/lib/auth';
 import { createAuditLog } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
     // Get current user before deleting session
-    const session = await verifySession();
-    const userId = session?.userId || null;
+    const session = await getSession();
+    const userId = session?.user?.id || null;
 
     // Get request info for audit log
     const ip_address =
