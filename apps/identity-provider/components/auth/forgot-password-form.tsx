@@ -29,14 +29,24 @@ export function ForgotPasswordForm() {
     setLoading(true);
 
     try {
-      // TODO: Implement forgot password API call
-      // await forgotPasswordAPI(data.email);
-      console.log('Sending password reset to:', data.email);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: data.email }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to send reset email');
+      }
 
       setSuccess(true);
-    } catch {
-      setError('Failed to send reset email. Please try again.');
+    } catch (err) {
+      const error = err as Error;
+      setError(
+        error.message || 'Failed to send reset email. Please try again.'
+      );
     } finally {
       setLoading(false);
     }
