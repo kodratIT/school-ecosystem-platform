@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseClient } from '@/lib/db';
+import { getSupabaseClient, createAuditLog } from '@/lib/db';
+import { getSession } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
@@ -62,6 +63,19 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    // Audit log
+    const session = await getSession();
+    await createAuditLog({
+      user_id: session?.user?.id || null,
+      action: 'school.create',
+      resource_type: 'school',
+      resource_id: data.id,
+      new_values: { name, npsn, city, province, is_active: data.is_active },
+      ip_address: request.headers.get('x-forwarded-for')?.split(',')[0] || null,
+      user_agent: request.headers.get('user-agent') || null,
+      school_id: data.id,
+    });
 
     return NextResponse.json({ data }, { status: 201 });
   } catch (error) {

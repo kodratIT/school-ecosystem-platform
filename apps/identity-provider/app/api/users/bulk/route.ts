@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseClient } from '@/lib/db';
+import { getSupabaseClient, createAuditLog } from '@/lib/db';
+import { getSession } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,6 +32,18 @@ export async function POST(request: NextRequest) {
           );
         }
 
+        // Audit log
+        const session = await getSession();
+        await createAuditLog({
+          user_id: session?.user?.id || null,
+          action: 'user.bulk_delete',
+          resource_type: 'user',
+          metadata: { userIds, count: userIds.length },
+          ip_address:
+            request.headers.get('x-forwarded-for')?.split(',')[0] || null,
+          user_agent: request.headers.get('user-agent') || null,
+        });
+
         return NextResponse.json({
           success: true,
           message: `${userIds.length} users deleted`,
@@ -52,6 +65,18 @@ export async function POST(request: NextRequest) {
           );
         }
 
+        // Audit log
+        const session = await getSession();
+        await createAuditLog({
+          user_id: session?.user?.id || null,
+          action: 'user.bulk_activate',
+          resource_type: 'user',
+          metadata: { userIds, count: userIds.length },
+          ip_address:
+            request.headers.get('x-forwarded-for')?.split(',')[0] || null,
+          user_agent: request.headers.get('user-agent') || null,
+        });
+
         return NextResponse.json({
           success: true,
           message: `${userIds.length} users activated`,
@@ -72,6 +97,18 @@ export async function POST(request: NextRequest) {
             { status: 500 }
           );
         }
+
+        // Audit log
+        const session = await getSession();
+        await createAuditLog({
+          user_id: session?.user?.id || null,
+          action: 'user.bulk_deactivate',
+          resource_type: 'user',
+          metadata: { userIds, count: userIds.length },
+          ip_address:
+            request.headers.get('x-forwarded-for')?.split(',')[0] || null,
+          user_agent: request.headers.get('user-agent') || null,
+        });
 
         return NextResponse.json({
           success: true,

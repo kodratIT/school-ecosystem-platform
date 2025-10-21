@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseClient } from '@/lib/db';
+import { getSupabaseClient, createAuditLog } from '@/lib/db';
+import { getSession } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
 
 export async function POST(request: NextRequest) {
@@ -55,6 +56,19 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    // Audit log
+    const session = await getSession();
+    await createAuditLog({
+      user_id: session?.user?.id || null,
+      action: 'user.create',
+      resource_type: 'user',
+      resource_id: data.id,
+      new_values: { name, email, role, is_active: data.is_active },
+      ip_address: request.headers.get('x-forwarded-for')?.split(',')[0] || null,
+      user_agent: request.headers.get('user-agent') || null,
+      school_id: data.school_id,
+    });
 
     return NextResponse.json({ data }, { status: 201 });
   } catch (error) {

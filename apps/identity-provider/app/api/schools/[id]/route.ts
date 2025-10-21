@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseClient } from '@/lib/db';
+import { getSupabaseClient, createAuditLog } from '@/lib/db';
+import { getSession } from '@/lib/auth';
 
 export async function PUT(
   request: NextRequest,
@@ -26,6 +27,13 @@ export async function PUT(
     }
 
     const supabase = getSupabaseClient();
+
+    // Get old values for audit
+    const { data: oldSchool } = await supabase
+      .from('schools')
+      .select('*')
+      .eq('id', params.id)
+      .single();
 
     // Update school
     const { data, error } = await supabase
@@ -59,6 +67,26 @@ export async function PUT(
       return NextResponse.json({ error: 'School not found' }, { status: 404 });
     }
 
+    // Audit log
+    const session = await getSession();
+    await createAuditLog({
+      user_id: session?.user?.id || null,
+      action: 'school.update',
+      resource_type: 'school',
+      resource_id: data.id,
+      old_values: oldSchool
+        ? {
+            name: oldSchool.name,
+            npsn: oldSchool.npsn,
+            is_active: oldSchool.is_active,
+          }
+        : null,
+      new_values: { name, npsn, is_active },
+      ip_address: request.headers.get('x-forwarded-for')?.split(',')[0] || null,
+      user_agent: request.headers.get('user-agent') || null,
+      school_id: data.id,
+    });
+
     return NextResponse.json({ data });
   } catch (error) {
     console.error('Error in PUT /api/schools/[id]:', error);
@@ -70,12 +98,19 @@ export async function PUT(
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
   try {
     const params = await context.params;
     const supabase = getSupabaseClient();
+
+    // Get school info for audit
+    const { data: school } = await supabase
+      .from('schools')
+      .select('*')
+      .eq('id', params.id)
+      .single();
 
     // Soft delete
     const { error } = await supabase
@@ -92,6 +127,19 @@ export async function DELETE(
         { status: 500 }
       );
     }
+
+    // Audit log
+    const session = await getSession();
+    await createAuditLog({
+      user_id: session?.user?.id || null,
+      action: 'school.delete',
+      resource_type: 'school',
+      resource_id: params.id,
+      old_values: school ? { name: school.name, npsn: school.npsn } : null,
+      ip_address: request.headers.get('x-forwarded-for')?.split(',')[0] || null,
+      user_agent: request.headers.get('user-agent') || null,
+      school_id: params.id,
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {
