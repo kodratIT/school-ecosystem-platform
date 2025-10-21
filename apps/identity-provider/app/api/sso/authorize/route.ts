@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
+import {
+  getOAuthClientByClientId,
+  validateRedirectUri,
+  canRequestScope,
+  supportsResponseType,
+} from '@repo/database-identity';
 import { z } from 'zod';
 
 const authorizeSchema = z.object({
@@ -37,15 +43,59 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
-    // Verify client_id (Service Provider)
-    // TODO: Implement proper SP registration
-    const validClientIds = process.env.VALID_CLIENT_IDS?.split(',') || [];
+    // Verify OAuth client exists and is active
+    const client = await getOAuthClientByClientId(params.client_id);
 
-    if (!validClientIds.includes(params.client_id)) {
+    if (!client) {
+      const errorUrl = new URL(params.redirect_uri);
+      errorUrl.searchParams.set('error', 'invalid_client');
+      errorUrl.searchParams.set('error_description', 'Unknown client');
+      if (params.state) errorUrl.searchParams.set('state', params.state);
+      return NextResponse.redirect(errorUrl);
+    }
+
+    if (!client.is_active) {
+      const errorUrl = new URL(params.redirect_uri);
+      errorUrl.searchParams.set('error', 'unauthorized_client');
+      errorUrl.searchParams.set('error_description', 'Client is inactive');
+      if (params.state) errorUrl.searchParams.set('state', params.state);
+      return NextResponse.redirect(errorUrl);
+    }
+
+    // Validate redirect URI
+    if (!validateRedirectUri(client, params.redirect_uri)) {
       return NextResponse.json(
-        { error: 'invalid_client', error_description: 'Unknown client_id' },
+        {
+          error: 'invalid_request',
+          error_description: 'Invalid redirect_uri',
+        },
         { status: 400 }
       );
+    }
+
+    // Validate response type
+    if (!supportsResponseType(client, params.response_type)) {
+      const errorUrl = new URL(params.redirect_uri);
+      errorUrl.searchParams.set('error', 'unsupported_response_type');
+      errorUrl.searchParams.set(
+        'error_description',
+        'Response type not supported'
+      );
+      if (params.state) errorUrl.searchParams.set('state', params.state);
+      return NextResponse.redirect(errorUrl);
+    }
+
+    // Validate scope
+    const scope = params.scope || 'openid profile email';
+    if (!canRequestScope(client, scope)) {
+      const errorUrl = new URL(params.redirect_uri);
+      errorUrl.searchParams.set('error', 'invalid_scope');
+      errorUrl.searchParams.set(
+        'error_description',
+        'Requested scope not allowed'
+      );
+      if (params.state) errorUrl.searchParams.set('state', params.state);
+      return NextResponse.redirect(errorUrl);
     }
 
     // Generate authorization code

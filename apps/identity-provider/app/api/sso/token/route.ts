@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { TokenManager } from '@repo/jwt';
 import { getSupabaseClient } from '@/lib/db';
+import {
+  verifyClientCredentials,
+  updateClientLastUsed,
+  supportsGrantType,
+} from '@repo/database-identity';
 import { z } from 'zod';
 import { cookies } from 'next/headers';
 
@@ -25,14 +30,13 @@ export async function POST(request: NextRequest) {
     // Validate request
     const params = tokenSchema.parse(body);
 
-    // Verify client credentials
-    // TODO: Implement proper SP registration with secrets
-    const validClients: Record<string, string> = {
-      'ppdb-app': process.env.PPDB_CLIENT_SECRET || '',
-      'sis-app': process.env.SIS_CLIENT_SECRET || '',
-    };
+    // Verify client credentials from database
+    const client = await verifyClientCredentials(
+      params.client_id,
+      params.client_secret
+    );
 
-    if (validClients[params.client_id] !== params.client_secret) {
+    if (!client) {
       return NextResponse.json(
         {
           error: 'invalid_client',
@@ -41,6 +45,20 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       );
     }
+
+    // Verify grant type is supported
+    if (!supportsGrantType(client, params.grant_type)) {
+      return NextResponse.json(
+        {
+          error: 'unsupported_grant_type',
+          error_description: 'Grant type not supported by this client',
+        },
+        { status: 400 }
+      );
+    }
+
+    // Update last used timestamp
+    await updateClientLastUsed(client.client_id);
 
     // Retrieve code data from cookie
     const cookieStore = await cookies();
