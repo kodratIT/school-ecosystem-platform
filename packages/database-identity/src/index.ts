@@ -112,6 +112,26 @@ export type {
   CreateAuthorizationCodeInput,
 } from './queries/authorization-codes';
 
+// Query Builders - Email Verification
+export {
+  createEmailVerification,
+  getEmailVerificationByToken,
+  markEmailVerificationVerified,
+  invalidateUserEmailVerifications,
+  getActiveVerificationToken,
+  recordEmailResendAttempt,
+  countRecentResendAttemptsByEmail,
+  countRecentResendAttemptsByIP,
+  getLastResendAttempt,
+  cleanupExpiredEmailVerifications,
+  cleanupOldResendAttempts,
+} from './queries/email-verification';
+export type {
+  EmailVerification,
+  CreateEmailVerificationInput,
+  EmailResendAttempt,
+} from './queries/email-verification';
+
 // Utils - Hash
 export {
   hashPassword,
