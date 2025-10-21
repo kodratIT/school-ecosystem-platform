@@ -110,3 +110,39 @@ export async function createUser(userData: {
 
   return data;
 }
+
+/**
+ * Create audit log entry
+ */
+export async function createAuditLog(params: {
+  user_id: string | null;
+  action: string;
+  resource_type: string;
+  resource_id?: string | null;
+  old_values?: Record<string, unknown> | null;
+  new_values?: Record<string, unknown> | null;
+  ip_address?: string | null;
+  user_agent?: string | null;
+  metadata?: Record<string, unknown> | null;
+  school_id?: string | null;
+}) {
+  const supabase = getSupabaseClient();
+
+  const { error } = await supabase.from('audit_logs').insert({
+    user_id: params.user_id,
+    action: params.action,
+    resource_type: params.resource_type,
+    resource_id: params.resource_id || null,
+    old_values: params.old_values || null,
+    new_values: params.new_values || null,
+    ip_address: params.ip_address || null,
+    user_agent: params.user_agent || null,
+    metadata: params.metadata || null,
+    school_id: params.school_id || null,
+  });
+
+  if (error) {
+    console.error('Failed to create audit log:', error);
+    // Don't throw - audit logging should not break the main flow
+  }
+}
