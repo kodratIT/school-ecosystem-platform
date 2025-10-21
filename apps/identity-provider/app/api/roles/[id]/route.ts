@@ -26,11 +26,8 @@ export async function DELETE(
     // Delete role permissions first
     await supabase.from('role_permissions').delete().eq('role_id', params.id);
 
-    // Soft delete role
-    const { error } = await supabase
-      .from('roles')
-      .update({ deleted_at: new Date().toISOString() })
-      .eq('id', params.id);
+    // Delete role (hard delete, roles table doesn't have deleted_at)
+    const { error } = await supabase.from('roles').delete().eq('id', params.id);
 
     if (error) {
       console.error('Error deleting role:', error);
