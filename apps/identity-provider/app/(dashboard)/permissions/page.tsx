@@ -37,12 +37,8 @@ export default async function PermissionsPage({
 
   const supabase = getSupabaseClient();
 
-  // Build query
-  let query = supabase
-    .from('permissions')
-    .select('*')
-    .is('deleted_at', null)
-    .order('resource');
+  // Build query (no soft delete - permissions are hard deleted)
+  let query = supabase.from('permissions').select('*').order('resource');
 
   // Filter by resource
   if (params.resource) {
