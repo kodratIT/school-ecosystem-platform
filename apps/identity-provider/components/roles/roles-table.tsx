@@ -1,20 +1,7 @@
 'use client';
 
-import {
-  MoreHorizontal,
-  Edit,
-  Trash2,
-  Shield,
-  Calendar,
-  Plus,
-} from 'lucide-react';
+import { Shield, Calendar, Plus } from 'lucide-react';
 import Link from 'next/link';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
@@ -31,32 +18,6 @@ interface RolesTableProps {
 }
 
 export function RolesTable({ roles }: RolesTableProps) {
-  const handleDeleteRole = async (roleId: string, isSystem: boolean) => {
-    if (isSystem) {
-      alert('System roles cannot be deleted');
-      return;
-    }
-
-    if (!confirm('Are you sure you want to delete this role?')) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/roles/${roleId}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete role');
-      }
-
-      window.location.reload();
-    } catch (error) {
-      alert('Error deleting role');
-      console.error(error);
-    }
-  };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -86,31 +47,6 @@ export function RolesTable({ roles }: RolesTableProps) {
                 )}
               </div>
             </div>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem asChild>
-                  <Link href={`/roles/${role.id}`}>
-                    <Edit className="mr-2 h-4 w-4" />
-                    Edit
-                  </Link>
-                </DropdownMenuItem>
-                {!role.is_system && (
-                  <DropdownMenuItem
-                    className="text-red-600"
-                    onClick={() => handleDeleteRole(role.id, role.is_system)}
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Delete
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
 
           {role.description && (

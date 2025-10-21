@@ -10,6 +10,7 @@ import {
   Shield,
   ChevronDown,
   Key,
+  ScrollText,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -45,6 +46,12 @@ export function DashboardNav({ user }: DashboardNavProps) {
       href: '/schools',
       label: 'Schools',
       icon: Building2,
+      roles: ['super_admin'],
+    },
+    {
+      href: '/audit',
+      label: 'Audit Logs',
+      icon: ScrollText,
       roles: ['super_admin'],
     },
     { href: '/settings', label: 'Settings', icon: Settings },
