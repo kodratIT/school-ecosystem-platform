@@ -9,7 +9,7 @@ function formatDate(date: string) {
     day: 'numeric',
   });
 }
-import { MoreHorizontal, Edit, Trash2, Ban } from 'lucide-react';
+import { Edit, Trash2, Ban, UserCheck } from 'lucide-react';
 import Link from 'next/link';
 import {
   Table,
@@ -19,12 +19,6 @@ import {
   TableBody,
   TableCell,
 } from '@/components/ui/table';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
@@ -213,7 +207,7 @@ export function UsersTable({ users }: UsersTableProps) {
             <TableHead>Role</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Created</TableHead>
-            <TableHead className="w-12"></TableHead>
+            <TableHead className="w-48">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -246,34 +240,41 @@ export function UsersTable({ users }: UsersTableProps) {
               </TableCell>
               <TableCell>{formatDate(user.created_at)}</TableCell>
               <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
+                <div className="flex items-center justify-end gap-2">
+                  <Link href={`/users/${user.id}`}>
                     <Button variant="ghost" size="sm">
-                      <MoreHorizontal className="h-4 w-4" />
+                      <Edit className="mr-1 h-4 w-4" />
+                      Edit
                     </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem asChild>
-                      <Link href={`/users/${user.id}`}>
-                        <Edit className="mr-2 h-4 w-4" />
-                        Edit
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => handleBanUser(user.id, user.is_active)}
-                    >
-                      <Ban className="mr-2 h-4 w-4" />
-                      {user.is_active ? 'Ban User' : 'Activate User'}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="text-red-600"
-                      onClick={() => handleDeleteUser(user.id)}
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                  </Link>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleBanUser(user.id, user.is_active)}
+                    className="hover:bg-gray-100"
+                  >
+                    {user.is_active ? (
+                      <>
+                        <Ban className="mr-1 h-4 w-4" />
+                        Ban
+                      </>
+                    ) : (
+                      <>
+                        <UserCheck className="mr-1 h-4 w-4" />
+                        Activate
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDeleteUser(user.id)}
+                    className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                  >
+                    <Trash2 className="mr-1 h-4 w-4" />
+                    Delete
+                  </Button>
+                </div>
               </TableCell>
             </TableRow>
           ))}
