@@ -75,7 +75,7 @@ const DropdownMenuTrigger = React.forwardRef<
   HTMLDivElement,
   { asChild?: boolean; children: React.ReactNode }
 >(({ asChild, children }, ref) => {
-  const { open } = useDropdownMenu();
+  const { open, setOpen } = useDropdownMenu();
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
