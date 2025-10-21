@@ -15,14 +15,21 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar */}
+    <div className="flex h-screen overflow-hidden bg-gray-50">
+      {/* Fixed Sidebar */}
       <DashboardNav user={user} />
 
-      {/* Main content */}
-      <div className="flex-1 flex flex-col">
-        <DashboardHeader user={user} />
-        <main className="flex-1 p-8">{children}</main>
+      {/* Main content area */}
+      <div className="flex flex-1 flex-col overflow-hidden pl-64">
+        {/* Fixed Header */}
+        <div className="fixed left-64 right-0 top-0 z-10">
+          <DashboardHeader user={user} />
+        </div>
+
+        {/* Scrollable Content */}
+        <main className="flex-1 overflow-y-auto pt-16">
+          <div className="p-8">{children}</div>
+        </main>
       </div>
     </div>
   );
