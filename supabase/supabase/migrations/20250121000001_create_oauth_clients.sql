@@ -73,11 +73,11 @@ CREATE INDEX idx_oauth_clients_name ON oauth_clients(name);
 -- ============================================
 -- TRIGGER FOR UPDATED_AT
 -- ============================================
--- Reuse the update_updated_at_column function from previous migrations
+-- Reuse the update_updated_at function from previous migrations
 CREATE TRIGGER update_oauth_clients_updated_at
     BEFORE UPDATE ON oauth_clients
     FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
+    EXECUTE FUNCTION update_updated_at();
 
 -- ============================================
 -- ROW LEVEL SECURITY (RLS)
