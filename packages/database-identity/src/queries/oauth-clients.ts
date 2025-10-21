@@ -1,12 +1,45 @@
 import { getSupabaseClient } from '../client/supabase';
 import { hashPassword, comparePassword, generateSecret } from '../utils/hash';
 import { handleDatabaseError } from '../utils/errors';
-import type { Database } from '../types/database';
 
-type OAuthClient = Database['public']['Tables']['oauth_clients']['Row'];
-type NewOAuthClient = Database['public']['Tables']['oauth_clients']['Insert'];
-type UpdateOAuthClient =
-  Database['public']['Tables']['oauth_clients']['Update'];
+// Temporary type definitions until Supabase types are regenerated
+type OAuthClient = {
+  id: string;
+  client_id: string;
+  client_secret_hash: string;
+  name: string;
+  description?: string | null;
+  logo_url?: string | null;
+  homepage_url?: string | null;
+  redirect_uris: string[];
+  post_logout_redirect_uris?: string[];
+  allowed_scopes: string[];
+  grant_types: string[];
+  response_types: string[];
+  access_token_lifetime: number;
+  refresh_token_lifetime: number;
+  id_token_lifetime: number;
+  require_pkce: boolean;
+  require_consent: boolean;
+  trusted: boolean;
+  is_confidential: boolean;
+  is_active: boolean;
+  created_by?: string | null;
+  created_at: string;
+  updated_at: string;
+  last_used_at?: string | null;
+};
+
+type NewOAuthClient = Omit<
+  OAuthClient,
+  'id' | 'created_at' | 'updated_at' | 'last_used_at'
+> & {
+  id?: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+type UpdateOAuthClient = Partial<OAuthClient>;
 
 export interface CreateOAuthClientInput {
   name: string;

@@ -6,31 +6,42 @@ type AuditLog = Database['public']['Tables']['audit_logs']['Row'];
 type Json = Database['public']['Tables']['audit_logs']['Row']['metadata'];
 
 /**
- * Log audit event using database function
+ * Log audit event by inserting directly to audit_logs table
  */
 export async function logAudit(params: {
+  user_id?: string;
+  school_id?: string;
   action: string;
-  resourceType: string;
-  resourceId?: string;
+  resource_type: string;
+  resource_id?: string;
+  details?: Record<string, unknown>;
   description?: string;
-  oldValues?: Record<string, unknown>;
-  newValues?: Record<string, unknown>;
+  old_values?: Record<string, unknown>;
+  new_values?: Record<string, unknown>;
   metadata?: Record<string, unknown>;
 }): Promise<string> {
   const supabase = getSupabaseClient();
 
-  const { data, error } = await supabase.rpc('log_audit', {
-    p_action: params.action,
-    p_resource_type: params.resourceType,
-    p_resource_id: params.resourceId,
-    p_description: params.description,
-    p_old_values: params.oldValues as Json,
-    p_new_values: params.newValues as Json,
-    p_metadata: params.metadata as Json,
-  });
+  const auditData = {
+    user_id: params.user_id || null,
+    school_id: params.school_id || null,
+    action: params.action,
+    resource_type: params.resource_type,
+    resource_id: params.resource_id || null,
+    description: params.description || null,
+    old_values: (params.old_values || null) as Json,
+    new_values: (params.new_values || null) as Json,
+    metadata: (params.details || params.metadata || null) as Json,
+  };
+
+  const { data, error } = await supabase
+    .from('audit_logs')
+    .insert(auditData)
+    .select('id')
+    .single();
 
   if (error) handleDatabaseError(error);
-  return data as string;
+  return data?.id || '';
 }
 
 /**
@@ -217,8 +228,8 @@ export async function logUserAction(
 ): Promise<string> {
   return logAudit({
     action,
-    resourceType: 'users',
-    resourceId: userId,
+    resource_type: 'users',
+    resource_id: userId,
     description: details,
   });
 }
@@ -233,8 +244,8 @@ export async function logSchoolAction(
 ): Promise<string> {
   return logAudit({
     action,
-    resourceType: 'schools',
-    resourceId: schoolId,
+    resource_type: 'schools',
+    resource_id: schoolId,
     description: details,
   });
 }
@@ -249,8 +260,8 @@ export async function logAuthEvent(
 ): Promise<string> {
   return logAudit({
     action: `auth.${action}`,
-    resourceType: 'users',
-    resourceId: userId,
+    resource_type: 'users',
+    resource_id: userId,
     metadata,
   });
 }
