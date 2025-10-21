@@ -139,16 +139,11 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // TODO: Send email with reset link
-    // For now, just return success
-    // In Task 4, we'll implement email sending
+    // Send password reset email
     const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/reset-password?token=${token.token}`;
 
-    console.log('Password reset requested:', {
-      email: user.email,
-      resetUrl,
-      expiresAt: token.expires_at,
-    });
+    const { sendPasswordResetEmail } = await import('@/lib/email/send-email');
+    await sendPasswordResetEmail(user.email, user.name, resetUrl);
 
     return NextResponse.json({
       success: true,

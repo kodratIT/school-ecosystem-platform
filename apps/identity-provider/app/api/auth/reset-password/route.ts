@@ -124,13 +124,21 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // TODO: Send confirmation email (Task 4)
+    // Send confirmation email
+    const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/login`;
+
+    const { sendPasswordResetSuccessEmail } = await import(
+      '@/lib/email/send-email'
+    );
+    await sendPasswordResetSuccessEmail(
+      user.email,
+      user.name,
+      loginUrl,
+      clientIp
+    );
+
     // TODO: Invalidate all user sessions (security best practice)
-    // This would require session management integration
-    console.log('Password reset successful:', {
-      userId: user.id,
-      email: user.email,
-    });
+    // This would require Better Auth session management integration
 
     return NextResponse.json({
       success: true,
