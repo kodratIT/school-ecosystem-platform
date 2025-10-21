@@ -28,10 +28,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Create role
+    // Generate slug from name
+    const slug = name.toLowerCase().replace(/\s+/g, '_');
+
     const { data, error } = await supabase
       .from('roles')
       .insert({
         name,
+        slug,
         description,
         is_system: is_system ?? false,
       })
