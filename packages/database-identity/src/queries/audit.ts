@@ -15,10 +15,11 @@ export async function logAudit(params: {
   resource_type: string;
   resource_id?: string;
   details?: Record<string, unknown>;
-  description?: string;
   old_values?: Record<string, unknown>;
   new_values?: Record<string, unknown>;
   metadata?: Record<string, unknown>;
+  ip_address?: string;
+  user_agent?: string;
 }): Promise<string> {
   const supabase = getSupabaseClient();
 
@@ -28,10 +29,11 @@ export async function logAudit(params: {
     action: params.action,
     resource_type: params.resource_type,
     resource_id: params.resource_id || null,
-    description: params.description || null,
     old_values: (params.old_values || null) as Json,
     new_values: (params.new_values || null) as Json,
     metadata: (params.details || params.metadata || null) as Json,
+    ip_address: params.ip_address || null,
+    user_agent: params.user_agent || null,
   };
 
   const { data, error } = await supabase
@@ -224,13 +226,13 @@ export async function getAuditLogStats(schoolId?: string): Promise<{
 export async function logUserAction(
   action: string,
   userId: string,
-  details?: string
+  details?: Record<string, unknown>
 ): Promise<string> {
   return logAudit({
     action,
     resource_type: 'users',
     resource_id: userId,
-    description: details,
+    metadata: details,
   });
 }
 
@@ -240,13 +242,13 @@ export async function logUserAction(
 export async function logSchoolAction(
   action: string,
   schoolId: string,
-  details?: string
+  details?: Record<string, unknown>
 ): Promise<string> {
   return logAudit({
     action,
     resource_type: 'schools',
     resource_id: schoolId,
-    description: details,
+    metadata: details,
   });
 }
 
