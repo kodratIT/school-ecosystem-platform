@@ -2,7 +2,7 @@
 
 **Last Updated**: 2025-01-21  
 **Current Phase**: Phase 1 - Identity Provider (Enhanced Features) 🏗️  
-**Overall Progress**: Phase 0 Complete + Phase 1 Enhanced (11/13 base + STORY-026 complete)
+**Overall Progress**: Phase 0 Complete + Phase 1 Enhanced (11/13 base + STORY-026 + STORY-027 complete)
 
 ---
 
@@ -14,7 +14,7 @@ Implementation: ██████████████░  77% Phase 1 - 10 
 Overall: ████████████████░  88%
 ```
 
-**Current Task**: Phase 1 - STORY-026 COMPLETE ✅ (Password Reset Flow)  
+**Current Task**: Phase 1 - STORY-027 COMPLETE ✅ (PKCE Support)  
 **Next Milestone**: Complete remaining Phase 1 stories (SSO & OIDC endpoints)
 
 ---
@@ -66,8 +66,8 @@ Overall: ████████████████░  88%
 ✅ Phase 0: COMPLETE!
 ✅ Phase 1: 11/13 base stories + STORY-026 done (85%)
 
-🎉 STORY-012 to 020 + STORY-026: ALL COMPLETE!
-✅ Database + Auth + JWT + Dashboard + Password Reset
+🎉 STORY-012 to 020 + STORY-026 + STORY-027: ALL COMPLETE!
+✅ Database + Auth + JWT + Dashboard + Password Reset + PKCE
 
 ⏳ NEXT: STORY-021 (SSO Implementation)
 🔐 Implement Single Sign-On with OIDC
@@ -98,15 +98,16 @@ Overall: ████████████████░  88%
 | 019 | JWT/OIDC Service | ✅ DONE | 2024-12-21 | 2024-12-21 | @repo/jwt with RS256, ID/Access/Refresh tokens |
 | 020 | Dashboard Features | ✅ DONE | 2024-12-21 | 2024-12-21 | User & School management CRUD |
 | 026 | Password Reset Flow | ✅ DONE | 2025-01-21 | 2025-01-21 | Complete password reset with email, rate limiting |
+| 027 | PKCE Support | ✅ DONE | 2025-01-21 | 2025-01-21 | OAuth PKCE for secure public clients |
 | 021 | SSO Implementation | ⏳ TODO | - | - | After 020 |
 | 022 | OIDC Discovery Endpoint | ⏳ TODO | - | - | After 019 |
 | 023 | OIDC UserInfo Endpoint | ⏳ TODO | - | - | After 019 |
 | 024 | OIDC Client SDK | ⏳ TODO | - | - | After 021 |
 
-**Progress**: 11/13 base + 1 enhancement (85%) 🏗️
+**Progress**: 11/13 base + 2 enhancements (90%) 🏗️
 
-**Completed**: STORY-012 to 020 + STORY-026 ✅  
-**Current**: STORY-026 Password Reset Complete!  
+**Completed**: STORY-012 to 020 + STORY-026 + STORY-027 ✅  
+**Current**: STORY-027 PKCE Support Complete!  
 **Next**: STORY-021 (SSO Implementation)
 
 ---
@@ -170,6 +171,7 @@ Total: ████████████████░░░░  88% (21/24 
 - [x] STORY-019: JWT/OIDC Service ✅
 - [x] STORY-020: Dashboard Features (User & School CRUD) ✅
 - [x] STORY-026: Password Reset Flow ✅
+- [x] STORY-027: PKCE Support ✅
 
 **Next Up:**
 - [ ] STORY-021: SSO Implementation 🎯
@@ -244,6 +246,40 @@ Total: ████████████████░░░░  88% (21/24 
 ---
 
 ## 📝 Change Log
+
+### 2025-01-21 - 🔐 STORY-027 COMPLETE: PKCE Support
+- ✅ **Task 1**: Database migration for authorization_codes table
+  - Table for storing OAuth authorization codes
+  - PKCE columns: code_challenge, code_challenge_method
+  - Indexes for performance and security
+  - Cleanup function for expired codes
+  - RLS policies and constraints
+- ✅ **Task 2**: PKCE utility functions
+  - validateCodeVerifier/Challenge(): Format validation (43-128 chars, base64url)
+  - generateCodeChallenge(): S256 (SHA-256) and plain methods
+  - verifyCodeChallenge(): Timing-safe comparison
+  - generateCodeVerifier(): Secure random generation
+  - validatePKCEAuthParams(): Authorization request validation
+  - validatePKCETokenParams(): Token request validation
+- ✅ **Task 3a**: Database functions for authorization codes
+  - createAuthorizationCode(): Store code with PKCE params
+  - getAuthorizationCodeByCode(): Retrieve unused code
+  - validateAndConsumeAuthorizationCode(): Validate & mark as used
+  - Support for single-use codes with expiration
+- ✅ **Task 3b**: Update authorize endpoint
+  - Accept code_challenge and code_challenge_method
+  - Validate PKCE parameters with proper errors
+  - Store codes in database (replaced cookie storage)
+  - Enforce PKCE if client requires it
+- ✅ **Task 4**: Update token endpoint
+  - Accept code_verifier parameter
+  - Verify code_verifier matches stored code_challenge
+  - Timing-safe PKCE verification
+  - Database-based code validation (no cookies)
+  - Proper OAuth error responses
+- 🎯 **Achievement**: Complete PKCE implementation per RFC 7636
+- 🔒 **Security**: Authorization code interception attack prevention for SPAs/mobile apps
+- 📦 **Files Changed**: 5 commits across database, utilities, and API endpoints
 
 ### 2025-01-21 - 🎉 STORY-026 COMPLETE: Password Reset Flow
 - ✅ **Task 1**: Database migration for password_reset_tokens table
@@ -391,4 +427,4 @@ Total: ████████████████░░░░  88% (21/24 
 
 **Last Updated**: 2025-01-21  
 **Next Update**: After completing STORY-021  
-**Status**: Phase 1 Enhanced - 85% Complete (11/13 base + STORY-026) 🚀
+**Status**: Phase 1 Enhanced - 90% Complete (11/13 base + STORY-026 + STORY-027) 🚀
